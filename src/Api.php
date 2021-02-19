@@ -139,6 +139,20 @@ class Api {
                 $this->engineOutput = [];
                 $this->writeJSON();
                 break;
+
+            case 'TestRedis':
+
+                $redis = new \RedisClient\RedisClient([
+                    'server' => '127.0.0.1:6379',
+                    'timeout' => 1
+                ]);
+
+                $this->engineOutput = [
+                    "redis_client_version" => $redis->getSupportedVersion(),
+                    "redis_version" => $redis->info('Server')['redis_version']
+                ];
+                $this->writeJSON();
+                break;
             
             default:
                 $this->statusMessage = "Unknown query.";

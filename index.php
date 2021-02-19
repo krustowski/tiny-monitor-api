@@ -14,4 +14,7 @@ foreach (glob("src/*.php") as $filename) {
     include_once $filename;
 }
 
-new \tinyMonitor\Api();
+// composer load
+require_once __DIR__ . "/vendor/autoload.php";
+
+new Api();

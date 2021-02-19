@@ -1,0 +1,15 @@
+{
+    "name": "krustowski/tiny-monitor-api",
+    "description": "light-weight service monitoring tool in docker",
+    "type": "project",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "krustowski",
+            "email": "krusty@n0p.cz"
+        }
+    ],
+    "require": {
+        "cheprasov/php-redis-client": "^1.10"
+    }
+}

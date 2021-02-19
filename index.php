@@ -14,4 +14,4 @@ foreach (glob("src/*.php") as $filename) {
     include_once $filename;
 }
 
-new Api();
+new \tinyMonitor\Api();

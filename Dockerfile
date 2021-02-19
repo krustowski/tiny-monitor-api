@@ -19,13 +19,14 @@ RUN rm -rf /var/www/html && \
 
 # reconfigure services
 RUN rm -f /etc/nginx/http.d/* && \
-    ln -s ${APP_ROOT}/docker/tiny-monitor-api-nginx.conf /etc/nginx/http.d/ && \
-    mkdir /run/nginx && \
+    ln -s ${APP_ROOT}/docker/tiny-monitor-api-nginx.conf /etc/nginx/http.d/ 
+RUN mkdir /run/nginx && \
     chown nginx:nginx /run/nginx
+RUN echo "daemonize yes" >> /etc/redis.conf
 #RUN cat /etc/php8/php-fpm.d/www.conf && sed -i 's|listen = /run/php/php8.0-fpm.sock|listen = 9000|' /etc/php8/php-fpm.d/www.conf
 
 # final cmd batch
 WORKDIR ${APP_ROOT}
-USER nginx
+#USER nginx
 EXPOSE 80
 ENTRYPOINT ["docker/entrypoint.sh"]

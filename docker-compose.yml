@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+
+  tiny-monitor-api:
+    #image: tiny-monitor-api
+    build: .
+    #restart: onfail
+    depends_on: 
+      - redis-server
+    ports:
+      - 8001:80
+    environment:
+      APP_ROOT: /var/www/tiny-monitor-ap
+      HOSTNAME: tiny-monitor-api
+      REDIS_SERVER: redis-server
+      REDIS_PORT: 6379
+
+  redis-server:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379

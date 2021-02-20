@@ -5,26 +5,34 @@
  * 
  * @author krustowski <k@n0p.cz>
  * @author mxdpeep <f@mxd.cz>
+ * @license MIT
  */
 
 namespace tinyMonitor;
+
+use RedisClient\RedisClient;
 
 /**
  * Api class
  * 
  * contains request handling methods
  */
-class Api {
-
+class Api 
+{
     // API header vars
     private $apiName = "tiny-monitor REST API";
     private $apiVersion = "v1";
+    private $apiUsage = 0;
     private $apiTimestampStart;
-    private $remoteIP;
+    private $remoteAddress;
     private $statusMessage;
 
     // API config vars
-    private $logfile = "/dev/stdout";
+    private $logFile = "/dev/stdout";
+    private $redisConfig = [
+        'server' => 'redis-server:6379',
+        'timeout' => 1
+    ];
 
     // API data vars
     private $engineOutput = [];
@@ -34,7 +42,19 @@ class Api {
     private $safePOST = [];
     private $dataPayload = [];
 
-    public function __construct() {
+    // constants
+    const JSON_ASSOCIATIVE = true;
+    const MICROTIME_AS_FLOAT = true;
+    const MAX_API_USAGE_HOURLY = 1000;
+    const ACCESS_TIME_LIMIT = 3599; // 1 hour
+
+    public function __construct() 
+    {
+        // init
+        $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
+        $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
+        $this->$apiUsage = $this->getAPIUsage();
+
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
         $this->safePOST = (array) array_map("htmlspecialchars", $_POST);
@@ -43,10 +63,7 @@ class Api {
         $this->apiKey = $this->safeGET["apikey"] ?? null;
 
         // POST data, payload
-        $this->dataPayload = json_decode(file_get_contents('php://input'), true) ?? null;
-
-        $this->apiTimestampStart = (double) microtime(true) ?? null;
-        $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
+        $this->dataPayload = json_decode(file_get_contents('php://input'), self::JSON_ASSOCIATIVE) ?? null;
 
         // explode over full path query variable
         $this->routePath = explode('/', $this->safeGET["fullPath"]) ?? null;
@@ -55,15 +72,41 @@ class Api {
     }
 
     /**
-     * handleRequest function
+     * checks Redis cache for API usage
      * 
+     * @return int $usage usage for custom IP and user
+     */
+    private function getAPIUsage() 
+    {
+        $hour = \date("H");
+        $uid = 0 ?? $this->getUID();
+        $remoteAddress = $this->remoteAddress;
+        $key = "access_limiter_tiny-monitor-api_${remoteAddress}_${hour}_${uid}";
+        $redis = new RedisClient($this->redisConfig);
+        
+        $val = (int) $redis->get($key);
+        
+        if ($val > self::MAX_API_USAGE_HOURLY) { 
+            $this->statusMessage = "Too many requests!";
+            $this->writeJSON(429);
+        }
+
+        $redis->multi();
+        $redis->incr($key);
+        $redis->expire($key, self::ACCESS_TIME_LIMIT);
+        $redis->exec();
+        
+        $val++;
+        return $val;        
+    }
+
+    /**
      * entrypoint for all API calls
      */
-    private function handleRequest() {
+    private function handleRequest() 
+    {
         switch ($this->routePath[0]) {
             case 'GetStatus':
-                #$this->engineOutput = Engine\getStatus();
-
                 $sites = [
                     "https://digikatalog.cz",
                     "https://julia.mxd.cz",
@@ -116,6 +159,8 @@ class Api {
                     "https://wordpress-in-docker.mxd.cz/"
                 ];
 
+                //$this->engineOutput = Engine\getStatus();
+
                 foreach ($sites as $site) {
                     array_push($this->engineOutput, [
                         "hash" => hash("sha256", $site),
@@ -136,22 +181,50 @@ class Api {
                 break;
 
             case 'GetDetail':
+                if (empty($this->routePath[1])) {
+                    $this->statusMessage = "Hash list is required for this query!";
+                    $this->writeJSON(400);
+                }
+
                 $this->engineOutput = [];
                 $this->writeJSON();
                 break;
 
             case 'TestRedis':
-
-                $redis = new \RedisClient\RedisClient([
-                    'server' => '127.0.0.1:6379',
-                    'timeout' => 1
-                ]);
+                $redis = new RedisClient($this->redisConfig);
 
                 $this->engineOutput = [
                     "redis_client_version" => $redis->getSupportedVersion(),
                     "redis_version" => $redis->info('Server')['redis_version']
                 ];
                 $this->writeJSON();
+                break;
+
+            case 'WriteRedis':
+                $redis = new RedisClient($this->redisConfig);
+                $redis->executeRaw(['SET', 'kokot', 'mrdka']);
+                $this->statusMessage = 'DATA WRITTEN';
+                $this->writeJSON();
+                break;
+
+            case 'ReadRedis':
+                $redis = new RedisClient($this->redisConfig);
+                $engineOutput = [
+                   "'" . $redis->executeRaw(['GET', 'kokot']) . "'"
+                ];
+                $this->writeJSON();
+                break;
+
+            /**
+             * POST /AddSite
+             * 
+             * @param string $url site URL
+             * @param int $port site custom port (optional)
+             */
+            case 'AddSite':
+                break;
+
+            case 'Addservice':
                 break;
             
             default:
@@ -162,20 +235,24 @@ class Api {
     }
 
     /**
-     * writeJSON function
+     * API exit method -- outputs PRETTY JSON
      * 
-     * API return function
+     * @param int $code HTTP code (def. 200)
+     * @return void
      */
-    private function writeJSON($code = 200) {
+    private function writeJSON(int $code = 200) 
+    {
         $query = empty($this->routePath[0]) ? null : $this->routePath[0];
 
         $apiHeader = [
-            "name" => $this->apiName,
-            "version" => $this->apiVersion,
-            "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
-            "query" => $query,
-            "message" => $this->statusMessage ?? "DATA OK",
-            "status_code" => $code
+            "name" => (string) $this->apiName,
+            "version" => (string) $this->apiVersion,
+            "processing_time_in_ms" => (double) round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
+            "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
+            "api_usage_hourly" => (int) $this->$apiUsage,
+            "query" => (string) $query,
+            "message" => (string) $this->statusMessage ?? "DATA OK",
+            "status_code" => (int) $code
         ];
 
         $dataOutput = [

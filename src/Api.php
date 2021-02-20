@@ -262,7 +262,7 @@ class Api
             
             default:
                 $this->statusMessage = "Unknown function. Please, see API documentation.";
-                $this->writeJSON(404);
+                $this->writeJSON(400);
                 break;
         }
     }

@@ -247,7 +247,7 @@ class Api
             
             default:
                 $this->statusMessage = "Unknown function. Please, see API documentation.";
-                $this->writeJSON(404);
+                $this->writeJSON(400);
                 break;
         }
     }
@@ -267,7 +267,7 @@ class Api
             "version" => $this->apiVersion,
             "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
             "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
-            "api_usage_hourly" => $this->$apiUsage,
+            "api_usage_hourly" => $this->apiUsage,
             "function" => $function,
             "message" => $this->statusMessage ?? "DATA OK",
             "status_code" => $code

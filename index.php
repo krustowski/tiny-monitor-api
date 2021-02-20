@@ -11,11 +11,14 @@
 namespace tinyMonitor;
 
 // load all classes
-foreach (glob("src/*.php") as $filename) {
+foreach (glob(__DIR__ . "src/*.php") as $filename) {
     include_once $filename;
 }
 
 // composer load
 require_once __DIR__ . "/vendor/autoload.php";
+
+// defaults
+date_default_timezone_set('Europe/Prague');
 
 new Api();

@@ -175,7 +175,7 @@ class Api
 
             case 'GetDetail':
                 if (empty($this->routePath[1])) {
-                    $this->statusMessage = "Hash list is required for this query!";
+                    $this->statusMessage = "Hash list is required for this function!";
                     $this->writeJSON(400);
                 }
 
@@ -246,7 +246,7 @@ class Api
                 break;
             
             default:
-                $this->statusMessage = "Unknown query. Please, see API documentation.";
+                $this->statusMessage = "Unknown function. Please, see API documentation.";
                 $this->writeJSON(404);
                 break;
         }
@@ -260,7 +260,7 @@ class Api
      */
     private function writeJSON(int $code = 200) 
     {
-        $query = empty($this->routePath[0]) ? null : $this->routePath[0];
+        $function = empty($this->routePath[0]) ? null : $this->routePath[0];
 
         $apiHeader = [
             "name" => $this->apiName,
@@ -268,7 +268,7 @@ class Api
             "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
             "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
             "api_usage_hourly" => $this->$apiUsage,
-            "query" => $query,
+            "function" => $function,
             "message" => $this->statusMessage ?? "DATA OK",
             "status_code" => $code
         ];

@@ -170,13 +170,6 @@ class Api
                     ]);
                 }
 
-                /*$this->engineOutput = [
-                    "hash" => hash("sha256", "https://mon.n0p.cz/"),
-                    "url" => "https://mon.n0p.cz/",
-                    "alive" => 1,
-                    "timestamp" => time()
-                ];*/
-
                 $this->writeJSON();
                 break;
 
@@ -249,7 +242,7 @@ class Api
             case 'AddSite':
                 break;
 
-            case 'Addservice':
+            case 'AddService':
                 break;
             
             default:

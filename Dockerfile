@@ -6,8 +6,6 @@
 FROM alpine:latest
 
 ENV APP_ROOT="/var/www/tiny-monitor-api"
-ENV HOSTNAME="tiny-monitor-api"
-ENV REDIS_SERVER="redis-server"
 ENV REDIS_PORT=6379
 
 # install essentials
@@ -26,7 +24,7 @@ RUN rm -f /etc/nginx/http.d/* && \
 RUN mkdir /run/nginx && \
     chown nginx:nginx /run/nginx
 RUN chown -R :nginx /var/log/php8/ && chmod -R g+rw /var/log/php8/
-RUN sed -i "s|'server' => 'redis-server:6379',|'server' => '${REDIS_SERVER}:${REDIS_PORT}',|" ${APP_ROOT}/src/Api.php
+RUN sed -i "s|'server' => 'redis-server:6379',|'server' => 'redis-server:${REDIS_PORT}',|" ${APP_ROOT}/src/Api.php
 
 # final cmd batch
 WORKDIR ${APP_ROOT}

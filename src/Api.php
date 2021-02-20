@@ -186,7 +186,32 @@ class Api
                     $this->writeJSON(400);
                 }
 
-                $this->engineOutput = [];
+                $list = explode(",", $this->routePath[1]);
+
+                // test input
+                foreach($list as $item) {
+                    \array_push($this->engineOutput, [
+                        "hash" => $item,
+                        "time" => '$last_metering',
+                        "downtime" => '$downtime',
+                        "uptime" => '$uptime',
+                        "availability60" => '$availability60',
+                        "availability30" => '$availability30',
+                        "availability14" => '$availability14',
+                        "availability7" => '$availability7',
+                        "availability1" => '$availability1',
+                        "memavail" => '$memavail',
+                        "diskavail" => '$diskavail',
+                        "roundtrip" => '$roundtrip',
+                        "roundtrip60" => '$roundtrip60',
+                        "roundtrip30" => '$roundtrip30',
+                        "roundtrip14" => '$roundtrip14',
+                        "roundtrip7" => '$roundtrip7',
+                        "roundtrip1" => '$roundtrip1'
+                    ]);
+                }
+
+                //$this->engineOutput = Engine\getDetail($list);
                 $this->writeJSON();
                 break;
 
@@ -245,14 +270,14 @@ class Api
         $query = empty($this->routePath[0]) ? null : $this->routePath[0];
 
         $apiHeader = [
-            "name" => (string) $this->apiName,
-            "version" => (string) $this->apiVersion,
-            "processing_time_in_ms" => (double) round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
+            "name" => $this->apiName,
+            "version" => $this->apiVersion,
+            "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
             "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
-            "api_usage_hourly" => (int) $this->$apiUsage,
-            "query" => (string) $query,
-            "message" => (string) $this->statusMessage ?? "DATA OK",
-            "status_code" => (int) $code
+            "api_usage_hourly" => $this->$apiUsage,
+            "query" => $query,
+            "message" => $this->statusMessage ?? "DATA OK",
+            "status_code" => $code
         ];
 
         $dataOutput = [

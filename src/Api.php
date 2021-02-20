@@ -246,7 +246,7 @@ class Api
                 break;
             
             default:
-                $this->statusMessage = "Unknown query.";
+                $this->statusMessage = "Unknown query. Please, see API documentation.";
                 $this->writeJSON(404);
                 break;
         }

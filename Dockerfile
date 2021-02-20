@@ -29,5 +29,5 @@ RUN sed -i "s|'server' => 'redis-server:6379',|'server' => 'redis-server:${REDIS
 # final cmd batch
 WORKDIR ${APP_ROOT}
 USER nginx
-EXPOSE 80
+EXPOSE 8080
 ENTRYPOINT ["docker/entrypoint.sh"]

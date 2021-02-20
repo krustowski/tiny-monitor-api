@@ -48,12 +48,27 @@ class Api
     const MAX_API_USAGE_HOURLY = 1000;
     const ACCESS_TIME_LIMIT = 3599; // 1 hour
 
+    const HTTP_CODE = [
+        400 => "Bad Request",
+        401 => "Unauthorized",
+        403 => "Forbidden",
+        404 => "Not Found",
+        406 => "Not Acceptable",
+        410 => "Gone",
+        420 => "Enhance Your Calm",
+        429 => "Too Many Requests",
+        500 => "Internal Server Error",
+        502 => "Bad Gateway",
+        503 => "Service Unavailable",
+        504 => "Gateway Timeout",
+    ];
+
     public function __construct() 
     {
         // init
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
-        $this->$apiUsage = $this->getAPIUsage();
+        $this->apiUsage = $this->getAPIUsage();
 
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
@@ -278,7 +293,8 @@ class Api
             "data" => $this->engineOutput ?? null
         ];
 
-        header('Content-type: application/json');
+	header("HTTP/1.1 ${code} " . self::HTTP_CODE[$code]);
+        header("Content-type: application/json");
         echo json_encode($dataOutput, JSON_PRETTY_PRINT);
         exit();
     }

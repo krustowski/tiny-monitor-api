@@ -63,17 +63,17 @@ class Engine
         }
 
         //execute the multi handle
-        /*do {
+        do {
             $status = curl_multi_exec($multiHandle, $active);
             if ($active) {
                 curl_multi_select($multiHandle);
             }
         } while ($active && $status == CURLM_OK);
 
-        // atempt #2
+        /* atempt #2
         do {
             curl_multi_exec($multiHandle, $running);
-        } while ($running > 0);*/
+        } while ($running > 0);
 
         $active = null;
         do {
@@ -86,19 +86,23 @@ class Engine
                     $mrc = curl_multi_exec($multiHandle, $active);
                 } while ($mrc == CURLM_CALL_MULTI_PERFORM);
             }
-        }
+        }*/
 
         //read info and close the handles
         foreach ($handles as $hash => $handle) {
-            if (curl_errno($handle))
-                $gotInfo = "failed"; // TODO
-            else
+	    $gotInfo = [];
+
+            if (curl_errno($handle)) {
+                $gotInfo[] = [
+			"hash" => $hash,
+			"status" => "failed"
+		]; // TODO
+	    } else {
                 $gotInfo = curl_getinfo($handle);
+		$gotInfo["hash"] = $hash;
+	    }
 
-            array_push($engineOutput, [
-                $hash => $gotInfo
-                ]);
-
+	    $engineOutput[] = $gotInfo;
             curl_multi_remove_handle($multiHandle, $handle);
         }
         curl_multi_close($multiHandle);

@@ -73,10 +73,10 @@ class Api
         "https://php.gscloud.cz",
         "https://pma.gscloud.cz",
         "https://pma35.mxd.cz",
-        "https://ssl.gscloud.cz:2083"
-        /*"https://sys.gscloud.cz",
-        "https://andini.cz"
-        /*"https://bbqpoint.cz",
+        "https://ssl.gscloud.cz:2083",
+        "https://sys.gscloud.cz",
+        "https://andini.cz",
+        "https://bbqpoint.cz",
         "https://book.gscloud.cz",
         "https://csking.gscloud.cz",
         "https://foodinc.cz",
@@ -114,7 +114,7 @@ class Api
         "https://monitor.gscloud.cz",
         "https://newz.mxd.cz/",
         "https://red.mxd.cz/",
-        "https://wordpress-in-docker.mxd.cz/"*/
+        "https://wordpress-in-docker.mxd.cz/"
     ];
 
     public function __construct() 

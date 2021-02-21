@@ -18,7 +18,4 @@ foreach (glob(__DIR__ . "src/*.php") as $filename) {
 // composer load
 require_once __DIR__ . "/vendor/autoload.php";
 
-// defaults
-date_default_timezone_set('Europe/Prague');
-
 new Api();

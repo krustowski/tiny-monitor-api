@@ -7,11 +7,12 @@ FROM alpine:latest
 
 ENV APP_ROOT="/var/www/tiny-monitor-api"
 ENV REDIS_PORT=6379
+ENV TZ="Europe/Prague"
 
 # install essentials
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache bash runit nginx php8 php8-fpm php8-curl php8-json
+    apk add --no-cache bash runit nginx php8 php8-fpm php8-curl php8-json tzdata
 
 # clone the repo
 COPY . ${APP_ROOT}

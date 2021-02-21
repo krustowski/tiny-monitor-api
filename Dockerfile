@@ -21,7 +21,7 @@ RUN apk update && \
 
 # clone the repo
 COPY . ${APP_ROOT}
-RUN rm -rf /var/www/html && \
+RUN rm -rf /var/www/{html,localhost} && \
     chown -R nginx:nginx ${APP_ROOT}
 
 # reconfigure services

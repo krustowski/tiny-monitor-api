@@ -14,14 +14,25 @@ docs:
 
 build:
 	@echo "🔨 \e[1;32m Building Docker image\e[0m"
-	@bash ./bin/build.sh
+	#@bash ./bin/build.sh
+	@docker-compose build
+
+rebuild:
+	@docker-compose build && docker-compose up --detach
+
+run:
+	@echo "Running Docker image"
+	@docker-compose up --detach
 
 test:
 	@echo "🔨 \e[1;32m Testing Docker image\e[0m"
 	@bash ./bin/test.sh
 
 push:
-	@echo "🔨 \e[1;32m Pushing image to DockerHub\e[0m"
-	@docker push gscloudcz/php74:latest
+	@echo "no way!"
+	#@echo "🔨 \e[1;32m Pushing image to DockerHub\e[0m"
+	#@docker push krustowski/php74:latest
 
 everything: docs build test push
+
+.PHONY: info

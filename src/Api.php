@@ -26,6 +26,7 @@ class Api
     private $apiTimestampStart;
     private $remoteAddress;
     private $statusMessage;
+    public $userAgent;
 
     // API config vars
     private $logFile = "/dev/stdout";
@@ -49,6 +50,7 @@ class Api
     const ACCESS_TIME_LIMIT = 3599; // 1 hour
 
     const HTTP_CODE = [
+        200 => "OK",
         400 => "Bad Request",
         401 => "Unauthorized",
         403 => "Forbidden",
@@ -63,11 +65,64 @@ class Api
         504 => "Gateway Timeout",
     ];
 
+    private $testSites = [
+        "https://digikatalog.cz",
+        "https://julia.mxd.cz",
+        "https://khanovaskola.cz",
+        "https://moodle-uploader-988765764d26.gscloud.cz",
+        "https://php.gscloud.cz",
+        "https://pma.gscloud.cz",
+        "https://pma35.mxd.cz",
+        "https://ssl.gscloud.cz:2083"
+        /*"https://sys.gscloud.cz",
+        "https://andini.cz"
+        /*"https://bbqpoint.cz",
+        "https://book.gscloud.cz",
+        "https://csking.gscloud.cz",
+        "https://foodinc.cz",
+        "https://foodincubator.cz",
+        "https://funclubbrno.cz",
+        "https://game.gscloud.cz",
+        "https://gscloud.cz",
+        "https://hirobistro.cz",
+        "https://hmc.gscloud.cz",
+        "https://indexmatrik.cz",
+        "https://jo.gscloud.cz",
+        "https://lasagna.gscloud.cz",
+        "https://mnamky.gscloud.cz",
+        "https://mini.gscloud.cz",
+        "https://podcast.gscloud.cz",
+        "https://podcastsk.gscloud.cz",
+        "https://moodle.andini.cz",
+        "https://moodle310.mxd.cz",
+        "https://moodle35.mxd.cz",
+        "https://moodle37.mxd.cz",
+        "https://moodle39.mxd.cz",
+        "https://academiacafe.cz",
+        "https://amadis.cz",
+        "https://andini-research.com",
+        "https://comunityenergy.com",
+        "https://handshop.cz",
+        "https://kepert.cz",
+        "https://kestrasnicke.cz",
+        "https://kouzelnehratky.cz",
+        "https://mxd.cz",
+        "https://parappuduwa.info",
+        "https://sirhal.cz",
+        "https://televariete2019.cz",
+        "https://zitaterapie.cz",
+        "https://monitor.gscloud.cz",
+        "https://newz.mxd.cz/",
+        "https://red.mxd.cz/",
+        "https://wordpress-in-docker.mxd.cz/"*/
+    ];
+
     public function __construct() 
     {
         // init
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
+        $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
         $this->apiUsage = $this->getAPIUsage();
 
         // clear HTTP requests
@@ -75,7 +130,12 @@ class Api
         $this->safePOST = (array) array_map("htmlspecialchars", $_POST);
 
         // get API key
-        $this->apiKey = $this->safeGET["apikey"] ?? null;
+        $apiKey = $this->safeGET["apikey"] ?? null;
+
+        if (!$apiKey) {
+            $this->statusMessage = "API key reuqired!";
+            $this->writeJSON(403);
+        }
 
         // POST data, payload
         $this->dataPayload = json_decode(file_get_contents('php://input'), self::JSON_ASSOCIATIVE) ?? null;
@@ -94,7 +154,7 @@ class Api
     private function getAPIUsage() 
     {
         $hour = \date("H");
-        $uid = 0 ?? $this->getUID();
+        $uid = 0; //?? $this->getUID();
         $remoteAddress = $this->remoteAddress;
         $key = "access_limiter_tiny-monitor-api_${remoteAddress}_${hour}_${uid}";
         $redis = new RedisClient($this->redisConfig);
@@ -121,58 +181,14 @@ class Api
     private function handleRequest() 
     {
         switch ($this->routePath[0]) {
+            case 'GetStatusAllTest':
+                //$engine = new Engine();
+                $this->engineOutput = Engine::checkSite($this->testSites); //$engine->checkSite($this->testSites);
+                $this->writeJSON();
+                break;
+
             case 'GetStatus':
-                $sites = [
-                    "https://digikatalog.cz",
-                    "https://julia.mxd.cz",
-                    "https://khanovaskola.cz",
-                    "https://moodle-uploader-988765764d26.gscloud.cz",
-                    "https://php.gscloud.cz",
-                    "https://pma.gscloud.cz",
-                    "https://pma35.mxd.cz",
-                    "https://ssl.gscloud.cz:2083",
-                    "https://sys.gscloud.cz",
-                    "https://andini.cz",
-                    "https://bbqpoint.cz",
-                    "https://book.gscloud.cz",
-                    "https://csking.gscloud.cz",
-                    "https://foodinc.cz",
-                    "https://foodincubator.cz",
-                    "https://funclubbrno.cz",
-                    "https://game.gscloud.cz",
-                    "https://gscloud.cz",
-                    "https://hirobistro.cz",
-                    "https://hmc.gscloud.cz",
-                    "https://indexmatrik.cz",
-                    "https://jo.gscloud.cz",
-                    "https://lasagna.gscloud.cz",
-                    "https://mnamky.gscloud.cz",
-                    "https://mini.gscloud.cz",
-                    "https://podcast.gscloud.cz",
-                    "https://podcastsk.gscloud.cz",
-                    "https://moodle.andini.cz",
-                    "https://moodle310.mxd.cz",
-                    "https://moodle35.mxd.cz",
-                    "https://moodle37.mxd.cz",
-                    "https://moodle39.mxd.cz",
-                    "https://academiacafe.cz",
-                    "https://amadis.cz",
-                    "https://andini-research.com",
-                    "https://comunityenergy.com",
-                    "https://handshop.cz",
-                    "https://kepert.cz",
-                    "https://kestrasnicke.cz",
-                    "https://kouzelnehratky.cz",
-                    "https://mxd.cz",
-                    "https://parappuduwa.info",
-                    "https://sirhal.cz",
-                    "https://televariete2019.cz",
-                    "https://zitaterapie.cz",
-                    "https://monitor.gscloud.cz",
-                    "https://newz.mxd.cz/",
-                    "https://red.mxd.cz/",
-                    "https://wordpress-in-docker.mxd.cz/"
-                ];
+                $sites = $this->testSites;
 
                 //$this->engineOutput = Engine\getStatus();
 
@@ -196,7 +212,7 @@ class Api
 
                 $list = explode(",", $this->routePath[1]);
 
-                // test input
+                // LASAGNA only!
                 foreach($list as $item) {
                     \array_push($this->engineOutput, [
                         "hash" => $item,
@@ -219,6 +235,9 @@ class Api
                     ]);
                 }
 
+                case 'Post':
+                    break;
+
                 //$this->engineOutput = Engine\getDetail($list);
                 $this->writeJSON();
                 break;
@@ -235,15 +254,16 @@ class Api
 
             case 'WriteRedis':
                 $redis = new RedisClient($this->redisConfig);
-                $redis->executeRaw(['SET', 'kokot', 'mrdka']);
+                //$redis->executeRaw(['SET', 'kokot', 'mrdka']);
+                $redis->set('kokot', 'piča');
                 $this->statusMessage = 'DATA WRITTEN';
                 $this->writeJSON();
                 break;
 
             case 'ReadRedis':
                 $redis = new RedisClient($this->redisConfig);
-                $engineOutput = [
-                   "'" . $redis->executeRaw(['GET', 'kokot']) . "'"
+                $this->engineOutput = [
+                   $redis->executeRaw(['GET', 'kokot'])
                 ];
                 $this->writeJSON();
                 break;
@@ -273,7 +293,7 @@ class Api
      * @param int $code HTTP code (def. 200)
      * @return void
      */
-    private function writeJSON(int $code = 200) 
+    private function writeJSON($code = 200) 
     {
         $function = empty($this->routePath[0]) ? null : $this->routePath[0];
 
@@ -290,11 +310,13 @@ class Api
 
         $dataOutput = [
             "api" => $apiHeader,
-            "data" => $this->engineOutput ?? null
+            "data" => $this->engineOutput
         ];
 
-	header("HTTP/1.1 ${code} " . self::HTTP_CODE[$code]);
+        header("User-Agent: " . $this->userAgent);
+	    header("HTTP/1.1 ${code} " . self::HTTP_CODE[$code]);
         header("Content-type: application/json");
+        
         echo json_encode($dataOutput, JSON_PRETTY_PRINT);
         exit();
     }

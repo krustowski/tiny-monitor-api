@@ -1,38 +1,58 @@
+# tiny-monitor-api Makefile
+
+-include .env
+
+# define standard colors
+# https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
+ifneq (,$(findstring xterm,${TERM}))
+	BLACK        := $(shell tput -Txterm setaf 0)
+	RED          := $(shell tput -Txterm setaf 1)
+	GREEN        := $(shell tput -Txterm setaf 2)
+	YELLOW       := $(shell tput -Txterm setaf 3)
+	LIGHTPURPLE  := $(shell tput -Txterm setaf 4)
+	PURPLE       := $(shell tput -Txterm setaf 5)
+	BLUE         := $(shell tput -Txterm setaf 6)
+	WHITE        := $(shell tput -Txterm setaf 7)
+	RESET        := $(shell tput -Txterm sgr0)
+else
+	BLACK        := ""
+	RED          := ""
+	GREEN        := ""
+	YELLOW       := ""
+	LIGHTPURPLE  := ""
+	PURPLE       := ""
+	BLUE         := ""
+	WHITE        := ""
+	RESET        := ""
+endif
+
 all: info
 
 info:
-	@echo "\e[1;32m👾 Welcome to Tiny Monitor API 👾\n"
+	@echo "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
 
-	@echo "🆘 \e[0;1mmake build\e[0m - build image"
-	@echo "🆘 \e[0;1mmake docs\e[0m - build documentation"
-	@echo "🆘 \e[0;1mmake push\e[0m - push image into the registry"
-	@echo "🆘 \e[0;1mmake test\e[0m - test image\n"
+	@echo "${YELLOW} make install${RESET} \t build and run the container"
+	@echo "${YELLOW} make build${RESET} \t build core image"
+	@echo "${YELLOW} make rebuild${RESET} \t rebuild image and restart the container"
+	@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
 
-docs:
-	@echo "🔨 \e[1;32m Building documentation\e[0m"
-	@bash ./bin/create_pdf.sh
+install: build, run, test
 
 build:
-	@echo "🔨 \e[1;32m Building Docker image\e[0m"
+	@echo "\n${YELLOW} Building the image...${RESET}\n"
 	#@bash ./bin/build.sh
 	@docker-compose build
 
 rebuild:
-	@docker-compose build && docker-compose up --detach
+	@echo "\n${YELLOW} Rebuilding and reruning the container...${RESET}\n"
+	@git pull 2> /dev/null && docker-compose build && docker-compose up --detach
 
+start:
 run:
-	@echo "Running Docker image"
+	@echo "\n${YELLOW} Starting the container...${RESET}\n"
 	@docker-compose up --detach
 
 test:
-	@echo "🔨 \e[1;32m Testing Docker image\e[0m"
+	@echo "\n${YELLOW} Testing the application/container...${RESET}\n"
 	@bash ./bin/test.sh
 
-push:
-	@echo "no way!"
-	#@echo "🔨 \e[1;32m Pushing image to DockerHub\e[0m"
-	#@docker push krustowski/php74:latest
-
-everything: docs build test push
-
-.PHONY: info

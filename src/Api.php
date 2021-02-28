@@ -117,7 +117,8 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
-        //$this->apiUsage = $this->getAPIUsage();
+	$this->checkDatabase;
+        //$this->checkApiUsage = $this->getAPIUsage();
 
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
@@ -141,11 +142,21 @@ class Api
     }
 
     /**
+     * check for SQLite database file to be present, otherwise creates a new schema
+     *
+     * @return void
+     */
+    private function checkDatabase() 
+    {
+    	file_exists(ROOT_DIR . "/sql/");
+    }
+
+    /**
      * checks Redis cache for API usage
      * 
      * @return int $usage usage for custom IP and user
      */
-    private function getAPIUsage() 
+    private function checkApiUsage() 
     {
         $hour = \date("H");
         $uid = 0; //?? $this->getUID();

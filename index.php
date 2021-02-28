@@ -10,7 +10,9 @@
 
 namespace tinyMonitor;
 
-defined("ROOT_DIR") || define("ROOT_DIR", __DIR__);
+// core contants
+defined("ROOT_DIR")         || define("ROOT_DIR", __DIR__);
+defined("DATABASE_FILE")    || define("DATABASE_FILE", ROOT_DIR . "/sql/tiny_monitor_core.db");
 
 // load all classes
 foreach (glob(ROOT_DIR . "/src/*.php") as $filename) {
@@ -18,6 +20,6 @@ foreach (glob(ROOT_DIR . "/src/*.php") as $filename) {
 }
 
 // composer load
-require_once ROOT_DIR . "/vendor/autoload.php";
+require_once ROOT_DIR . "/vendor/autoload.php" || die();
 
 new Api();

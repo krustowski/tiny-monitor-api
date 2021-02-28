@@ -24,7 +24,7 @@ class Api
     private $apiTimestampStart;
     private $remoteAddress;
     private $statusMessage;
-    public $userAgent;
+    public  $userAgent;
 
     // API config vars
     private $logFile = "/dev/stdout";
@@ -117,8 +117,8 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
-	$this->checkDatabase;
-        //$this->checkApiUsage = $this->getAPIUsage();
+	    $this->checkDatabase();
+        //$this->apiUsage = $this->getAPIUsage();
 
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
@@ -148,7 +148,9 @@ class Api
      */
     private function checkDatabase() 
     {
-    	file_exists(ROOT_DIR . "/sql/");
+    	if (file_exists(DATABASE_FILE)) {
+
+        }
     }
 
     /**

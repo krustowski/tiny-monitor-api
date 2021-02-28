@@ -12,7 +12,7 @@ namespace tinyMonitor;
 
 // core contants
 defined("ROOT_DIR")         || define("ROOT_DIR", __DIR__ . "/..");
-defined("DATABASE_FILE")    || define("DATABASE_FILE", ROOT_DIR . "/sql/tiny_monitor_core.db");
+defined("DATABASE_FILE")    || define("DATABASE_FILE", ROOT_DIR . "/tiny_monitor_core.db");
 
 // load all classes
 foreach (glob(ROOT_DIR . "/src/*.php") as $filename) {

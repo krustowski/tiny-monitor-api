@@ -7,6 +7,7 @@ FROM alpine:latest
 
 ENV APP_ROOT="/var/www/tiny-monitor-api"
 ENV TZ="Europe/Prague"
+ENV DATABASE_FILE="tiny_monitor_core.db"
 
 # install essentials
 RUN apk update && \
@@ -16,6 +17,7 @@ RUN apk update && \
 # clone the repo
 COPY . ${APP_ROOT}
 RUN cd /var/www && rm -rf html localhost && \
+    touch ${APP_ROOT}/${DATABASE_FILE} && \
     chown -R nginx:nginx ${APP_ROOT}
 
 # reconfigure services

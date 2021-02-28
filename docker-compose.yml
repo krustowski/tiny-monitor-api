@@ -7,7 +7,10 @@ services:
     build: .
     restart: unless-stopped
     ports:
-      - ${API_PORT}:80
+      - target: 80
+        published: ${API_PORT}
+        mode: host
+        protocol: tcp
     networks: 
       - tiny-monitor-net
 

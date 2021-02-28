@@ -10,6 +10,9 @@
 
 namespace tinyMonitor;
 
+use Exception;
+use \SQLite3 as SQLite;
+
 /**
  * Api class
  * 
@@ -118,7 +121,7 @@ class Api
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
 	    $this->checkDatabase();
-        //$this->apiUsage = $this->getAPIUsage();
+        $this->apiUsage = $this->checkApiUsage();
 
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
@@ -138,6 +141,7 @@ class Api
         // explode over full path query variable
         $this->routePath = explode('/', $this->safeGET["fullPath"]) ?? null;
 
+        // parse and exec an Api call
         $this->handleRequest();
     }
 
@@ -148,9 +152,15 @@ class Api
      */
     private function checkDatabase() 
     {
-    	if (file_exists(DATABASE_FILE)) {
-
+        try {
+            $sql = new SQLite(DATABASE_FILE);
         }
+        catch (Exception $e) {
+            $this->statusMessage = $e;
+            $this->writeJSON(500);
+        }
+        
+        $sql->exec("create table if not exists api_usage(id int(8), ip varchar(64), time int(16));");
     }
 
     /**
@@ -160,26 +170,7 @@ class Api
      */
     private function checkApiUsage() 
     {
-        $hour = \date("H");
-        $uid = 0; //?? $this->getUID();
-        $remoteAddress = $this->remoteAddress;
-        $key = "access_limiter_tiny-monitor-api_${remoteAddress}_${hour}_${uid}";
-        $redis = new RedisClient($this->redisConfig);
-        
-        $val = (int) $redis->get($key);
-        
-        if ($val > self::MAX_API_USAGE_HOURLY) { 
-            $this->statusMessage = "Too many requests!";
-            $this->writeJSON(429);
-        }
-
-        $redis->multi();
-        $redis->incr($key);
-        $redis->expire($key, self::ACCESS_TIME_LIMIT);
-        $redis->exec();
-        
-        $val++;
-        return $val;        
+        return 0;       
     }
 
     /**
@@ -195,11 +186,14 @@ class Api
                 break;
 
 	    case 'GetSystemStatus':
-	    	$sql = \SQLite3(ROOT_DIR . "/test.db");
+	    	$sql = new SQLite(DATABASE_FILE);
 
 	    	$this->engineOutput = [
-			"sqlite_version" => $sql->version
-		];
+                "remote_address" => $_SERVER["REMOTE_ADDR"],
+                "curl_version" => \curl_version()["version"] ?? null,
+                "sqlite_version" => $sql->version() ?? null,
+                "system_load" => sys_getloadavg() ?? null
+		    ];
 
 	        $this->writeJSON();
 	    	break;
@@ -289,6 +283,7 @@ class Api
         $function = empty($this->routePath[0]) ? null : $this->routePath[0];
 
         $apiHeader = [
+            "timestamp" => time() ?? null,
             "name" => $this->apiName,
             "version" => $this->apiVersion,
             "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),

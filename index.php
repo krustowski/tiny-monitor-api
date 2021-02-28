@@ -10,12 +10,14 @@
 
 namespace tinyMonitor;
 
+defined("ROOT_DIR") || define("ROOT_DIR", __DIR__);
+
 // load all classes
-foreach (glob(__DIR__ . "/src/*.php") as $filename) {
+foreach (glob(ROOT_DIR . "/src/*.php") as $filename) {
     include_once $filename;
 }
 
 // composer load
-require_once __DIR__ . "/vendor/autoload.php";
+require_once ROOT_DIR . "/vendor/autoload.php";
 
 new Api();

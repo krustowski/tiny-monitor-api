@@ -10,8 +10,6 @@
 
 namespace tinyMonitor;
 
-use RedisClient\RedisClient;
-
 /**
  * Api class
  * 
@@ -30,10 +28,6 @@ class Api
 
     // API config vars
     private $logFile = "/dev/stdout";
-    private $redisConfig = [
-        'server' => 'redis-server:6379',
-        'timeout' => 1
-    ];
 
     // API data vars
     private $engineOutput = [];
@@ -123,7 +117,7 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
-        $this->apiUsage = $this->getAPIUsage();
+        //$this->apiUsage = $this->getAPIUsage();
 
         // clear HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
@@ -187,6 +181,16 @@ class Api
                 $this->writeJSON();
                 break;
 
+	    case 'GetSystemStatus':
+	    	$sql = \SQLite3(ROOT_DIR . "/test.db");
+
+	    	$this->engineOutput = [
+			"sqlite_version" => $sql->version
+		];
+
+	        $this->writeJSON();
+	    	break;
+
             case 'GetStatus':
                 $sites = $this->testSites;
 
@@ -239,32 +243,6 @@ class Api
                     break;
 
                 //$this->engineOutput = Engine\getDetail($list);
-                $this->writeJSON();
-                break;
-
-            case 'TestRedis':
-                $redis = new RedisClient($this->redisConfig);
-
-                $this->engineOutput = [
-                    "redis_client_version" => $redis->getSupportedVersion(),
-                    "redis_version" => $redis->info('Server')['redis_version']
-                ];
-                $this->writeJSON();
-                break;
-
-            case 'WriteRedis':
-                $redis = new RedisClient($this->redisConfig);
-                //$redis->executeRaw(['SET', 'kokot', 'mrdka']);
-                $redis->set('kokot', 'piča');
-                $this->statusMessage = 'DATA WRITTEN';
-                $this->writeJSON();
-                break;
-
-            case 'ReadRedis':
-                $redis = new RedisClient($this->redisConfig);
-                $this->engineOutput = [
-                   $redis->executeRaw(['GET', 'kokot'])
-                ];
                 $this->writeJSON();
                 break;
 

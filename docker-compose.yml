@@ -6,22 +6,8 @@ services:
     container_name: tiny-monitor-api
     build: .
     restart: unless-stopped
-    depends_on: 
-      - redis-server
     ports:
       - ${API_PORT}:80
-    networks: 
-      - tiny-monitor-net
-    environment:
-      REDIS_SERVER: redis-server
-      REDIS_PORT: ${REDIS_PORT}
-
-  redis-server:
-    image: redis:latest
-    container_name: redis-server
-    restart: always
-    ports:
-      - ${REDIS_PORT}:6379
     networks: 
       - tiny-monitor-net
 

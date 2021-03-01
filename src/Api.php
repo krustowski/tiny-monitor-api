@@ -37,14 +37,16 @@ class Api
     private $routePath;
     private $apiKey;
     private $safeGET = [];
-    private $safePOST = [];
-    private $dataPayload = [];
+    //private $safePOST = [];
+    //private $dataPayload = [];
+
+    private $supervisorApiKey;
 
     // constants
     const JSON_ASSOCIATIVE = true;
     const MICROTIME_AS_FLOAT = true;
-    const MAX_API_USAGE_HOURLY = 600;
-    //const ACCESS_TIME_LIMIT = 3599; // 1 hour
+    const API_USAGE_LIMIT = 600;
+    const API_USAGE_TIME_LIMIT = 3600; // seconds
 
     const HTTP_CODE = [
         200 => "OK",
@@ -120,6 +122,7 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
+        $this->supervisorApiKey = getenv('SUPERVISOR_APIKEY');
 	    
         $this->checkDatabase();
         $this->checkApiUsage();
@@ -128,13 +131,7 @@ class Api
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
         $this->safePOST = (array) array_map("htmlspecialchars", $_POST);
 
-        // get API key
-        $apiKey = $this->safeGET["apikey"] ?? null;
-
-        if (!$apiKey) {
-            $this->statusMessage = "API key reuqired!";
-            $this->writeJSON(403);
-        }
+        $this->checkApiKey();
 
         // POST data, payload
         $this->dataPayload = json_decode(file_get_contents('php://input'), self::JSON_ASSOCIATIVE) ?? null;
@@ -144,6 +141,27 @@ class Api
 
         // parse and exec an Api call
         $this->handleRequest();
+    }
+
+    /**
+     * check for API key to be present and usable
+     */
+    private function checkApiKey()
+    {
+        // get API key
+        $this->apiKey = $this->safeGET["apikey"] ?? null;
+
+        if (!$this->apiKey) {
+            $this->statusMessage = "API key reuqired!";
+            $this->writeJSON(code: 403);
+        }
+
+        $sql = new SQLite(DATABASE_FILE);
+
+        if ($sql->querySingle("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apiKey . "' AND user_activated='1'") == 0) {
+            $this->statusMessage = "This API key is not authorized.";
+            $this->writeJSON(code: 401);
+        }
     }
 
     /**
@@ -158,32 +176,37 @@ class Api
 
             // create database schema
             $queries = [
-                "CREATE TABLE IF NOT EXISTS api_usage(
+                "CREATE TABLE IF NOT EXISTS monitor_usage(
                     usage_id INTEGER PRIMARY KEY AUTOINCREMENT, 
                     ip_address VARCHAR, 
                     time_stamp INTEGER
                 )",
-                "CREATE TABLE IF NOT EXISTS system_groups(
+                "CREATE TABLE IF NOT EXISTS monitor_groups(
                     group_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    group_name VARCHAR,
-                    group_users_json TEXT,
-                    services_json TEXT 
+                    group_name VARCHAR
                 )",
-                "CREATE TABLE IF NOT EXISTS system_users(
+                "CREATE TABLE IF NOT EXISTS monitor_users(
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_name VARCHAR,
                     user_apikey TEXT,
                     user_ip_address VARCHAR,
                     user_last_access TIMESTAMP,
+                    user_activated BOOLEAN,
                     group_id INTEGER
                 )",
-                "CREATE TABLE IF NOT EXISTS hosts(
+                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated) VALUES (
+                    0, 
+                    'supervisor', 
+                    '" . $this->supervisorApiKey . "',
+                    1
+                    )",
+                "CREATE TABLE IF NOT EXISTS monitor_hosts(
                     host_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     host_type VARCHAR,
                     host_name VARCHAR,
                     group_id INTEGER
                 )",
-                "CREATE TABLE IF NOT EXISTS services(
+                "CREATE TABLE IF NOT EXISTS monitor_services(
                     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     service_name VARCHAR,
                     service_type VARCHAR,
@@ -218,17 +241,20 @@ class Api
         $sql = new SQLite(DATABASE_FILE);
 
         // insert new usage
-        $sql->querySingle("INSERT INTO api_usage(ip_address, time_stamp) VALUES ('" . $this->remoteAddress . "', '" . time() . "')");
+        $sql->querySingle("INSERT INTO monitor_usage(ip_address, time_stamp) VALUES (
+            '" . $this->remoteAddress . "', 
+            '" . time() . "'
+            )");
 
-        // flush old entries
-        $sql->querySingle("DELETE FROM api_usage WHERE timestamp < " . time() - 3600);
+        // flush old entries => CRON/Celery
+        //$sql->querySingle("DELETE FROM api_usage WHERE timestamp < " . time() - 3600);
 
         // access from ip_address within 1 hour
-        $this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "'");
-        //$this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "' AND time_stamp BETWEEN " . time() - 3600 . " AND " . time());       
+        //$this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "'");
+        $this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM monitor_usage WHERE ip_address='" . $this->remoteAddress . "' AND time_stamp BETWEEN " . time() - self::API_USAGE_TIME_LIMIT . " AND " . time());       
 
-        if ($this->apiUsage > self::MAX_API_USAGE_HOURLY) {
-            $this->apiUsage = self::MAX_API_USAGE_HOURLY;
+        if ($this->apiUsage > self::API_USAGE_LIMIT) {
+            $this->apiUsage = self::API_USAGE_LIMIT;
             $this->writeJSON(429);
         }
     }
@@ -253,15 +279,15 @@ class Api
             // list tables
             $tablesquery = $sql->query("SELECT name FROM sqlite_master WHERE type='table';");
             while ($table = $tablesquery->fetchArray(SQLITE3_ASSOC)) {
-            if ($table['name'] != "sqlite_sequence") {
-                $tables[] = $table['name'];
+                if ($table['name'] != "sqlite_sequence") {
+                    $tables[] = $table['name'];
+                }
             }
-    }
 	    	$this->engineOutput = [
                 "remote_address" => $this->remoteAddress,
                 "curl_version" => \curl_version()["version"] ?? null,
-                "sqlite_version" => $sql->version() ?? null,
-                "system_load" => sys_getloadavg() ?? null,
+                "sqlite_version" => $sql->version()["version_string"] ?? null,
+                "system_load" => \sys_getloadavg() ?? null,
                 "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
 		    ];
 
@@ -348,7 +374,7 @@ class Api
      * @param int $code HTTP code (def. 200)
      * @return void
      */
-    private function writeJSON($code = 200) 
+    private function writeJSON(int $code = 200) 
     {
         $function = empty($this->routePath[0]) ? null : $this->routePath[0];
 
@@ -357,7 +383,7 @@ class Api
             "name" => $this->apiName,
             "version" => $this->apiVersion,
             "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
-            "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
+            "api_quota_hourly" => self::API_USAGE_LIMIT,
             "api_usage_hourly" => $this->apiUsage,
             "function" => $function,
             "message" => $this->statusMessage ?? self::HTTP_CODE[$code] ?? "DATA OK",

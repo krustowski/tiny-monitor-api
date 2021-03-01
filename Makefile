@@ -48,7 +48,7 @@ build:
 	@echo "\n${YELLOW} Building the image ...${RESET}\n"
 	@docker-compose build \
 		&& exit 0 \
-		|| echo "\n${RED} docker not running!${RESET}\n"; exit 1
+		|| echo "\n${RED} docker is not running!${RESET}\n"; exit 1
 
 run:
 	@echo "\n${YELLOW} Starting the container ...${RESET}\n"

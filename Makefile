@@ -31,28 +31,36 @@ all: info
 info:
 	@echo "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
 
-	@echo "${YELLOW} make install${RESET} \t build and run the container"
-	@echo "${YELLOW} make build${RESET} \t build core image"
-	@echo "${YELLOW} make rebuild${RESET} \t rebuild image and restart the container"
+	@echo "${YELLOW} make config${RESET}  \t configure the local environment"
+	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
 	@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
+#@echo "${YELLOW} make build${RESET} \t build core image"
+#@echo "${YELLOW} make redeploy${RESET} \t rebuild image, restart and test the container\n"
+#@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
 
-install: build, run, test
+config:
+	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
+	@bash ./bin/config.sh
+
+deploy: build run test
 
 build:
-	@echo "\n${YELLOW} Building the image...${RESET}\n"
-	#@bash ./bin/build.sh
-	@docker-compose build
+	@echo "\n${YELLOW} Building the image ...${RESET}\n"
+	@docker-compose build \
+		&& exit 0 \
+		|| echo "\n${RED} docker not running!${RESET}\n"; exit 1
 
-rebuild:
-	@echo "\n${YELLOW} Rebuilding and reruning the container...${RESET}\n"
-	@git pull 2> /dev/null && docker-compose build && docker-compose up --detach
-
-start:
 run:
-	@echo "\n${YELLOW} Starting the container...${RESET}\n"
+	@echo "\n${YELLOW} Starting the container ...${RESET}\n"
 	@docker-compose up --detach
 
 test:
-	@echo "\n${YELLOW} Testing the application/container...${RESET}\n"
+	@echo "\n${YELLOW} Testing the application/container ...${RESET}\n"
 	@bash ./bin/test.sh
+
+errorlog:
+	@echo "\n${YELLOW} Docker logs ...${RESET}\n"
+	@docker logs ${CONTAINER_NAME}
+	@echo "\n${YELLOW} Nginx error.log ...${RESET}\n"
+	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
 

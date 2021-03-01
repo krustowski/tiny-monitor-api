@@ -3,7 +3,7 @@ version: '3.6'
 services:
   tiny-monitor-api:
     image: tiny-monitor-api
-    container_name: tiny-monitor-api
+    container_name: ${CONTAINER_NAME}
     build: .
     restart: unless-stopped
     ports:

@@ -10,6 +10,7 @@
         }
     ],
     "require": {
-        "cheprasov/php-redis-client": "^1.10"
+        "cheprasov/php-redis-client": "^1.10",
+        "tracy/tracy": "^2.8"
     }
 }

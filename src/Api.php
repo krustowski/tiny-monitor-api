@@ -43,8 +43,8 @@ class Api
     // constants
     const JSON_ASSOCIATIVE = true;
     const MICROTIME_AS_FLOAT = true;
-    const MAX_API_USAGE_HOURLY = 1000;
-    const ACCESS_TIME_LIMIT = 3599; // 1 hour
+    const MAX_API_USAGE_HOURLY = 600;
+    //const ACCESS_TIME_LIMIT = 3599; // 1 hour
 
     const HTTP_CODE = [
         200 => "OK",
@@ -120,10 +120,11 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
-	    $this->checkDatabase();
-        $this->apiUsage = $this->checkApiUsage();
+	    
+        $this->checkDatabase();
+        $this->checkApiUsage();
 
-        // clear HTTP requests
+        // cleanse HTTP requests
         $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
         $this->safePOST = (array) array_map("htmlspecialchars", $_POST);
 
@@ -210,14 +211,26 @@ class Api
     /**
      * checks Redis cache for API usage
      * 
-     * @return int $usage usage for custom IP and user
+     * @return void
      */
     private function checkApiUsage() 
     {
         $sql = new SQLite(DATABASE_FILE);
-        //$sql->exec("INSERT INTO api_usage VALUES ('', )");
 
-        return $sql->exec("SELECT * FROM api_usage");       
+        // insert new usage
+        $sql->querySingle("INSERT INTO api_usage(ip_address, time_stamp) VALUES ('" . $this->remoteAddress . "', '" . time() . "')");
+
+        // flush old entries
+        $sql->querySingle("DELETE FROM api_usage WHERE timestamp < " . time() - 3600);
+
+        // access from ip_address within 1 hour
+        $this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "'");
+        //$this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "' AND time_stamp BETWEEN " . time() - 3600 . " AND " . time());       
+
+        if ($this->apiUsage > self::MAX_API_USAGE_HOURLY) {
+            $this->apiUsage = self::MAX_API_USAGE_HOURLY;
+            $this->writeJSON(429);
+        }
     }
 
     /**
@@ -245,7 +258,7 @@ class Api
             }
     }
 	    	$this->engineOutput = [
-                "remote_address" => $_SERVER["REMOTE_ADDR"],
+                "remote_address" => $this->remoteAddress,
                 "curl_version" => \curl_version()["version"] ?? null,
                 "sqlite_version" => $sql->version() ?? null,
                 "system_load" => sys_getloadavg() ?? null,
@@ -347,7 +360,7 @@ class Api
             "api_quota_hourly" => self::MAX_API_USAGE_HOURLY,
             "api_usage_hourly" => $this->apiUsage,
             "function" => $function,
-            "message" => $this->statusMessage ?? "DATA OK",
+            "message" => $this->statusMessage ?? self::HTTP_CODE[$code] ?? "DATA OK",
             "status_code" => $code
         ];
 
@@ -361,6 +374,6 @@ class Api
         header("Content-type: application/json");
         
         echo json_encode($dataOutput, JSON_PRETTY_PRINT);
-        exit();
+        exit;
     }
 }

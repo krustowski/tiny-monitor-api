@@ -154,13 +154,57 @@ class Api
     {
         try {
             $sql = new SQLite(DATABASE_FILE);
+
+            // create database schema
+            $queries = [
+                "CREATE TABLE IF NOT EXISTS api_usage(
+                    usage_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                    ip_address VARCHAR, 
+                    time_stamp INTEGER
+                )",
+                "CREATE TABLE IF NOT EXISTS system_groups(
+                    group_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    group_name VARCHAR,
+                    group_users_json TEXT,
+                    services_json TEXT 
+                )",
+                "CREATE TABLE IF NOT EXISTS system_users(
+                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_name VARCHAR,
+                    user_apikey TEXT,
+                    user_ip_address VARCHAR,
+                    user_last_access TIMESTAMP,
+                    group_id INTEGER
+                )",
+                "CREATE TABLE IF NOT EXISTS hosts(
+                    host_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    host_type VARCHAR,
+                    host_name VARCHAR,
+                    group_id INTEGER
+                )",
+                "CREATE TABLE IF NOT EXISTS services(
+                    service_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    service_name VARCHAR,
+                    service_type VARCHAR,
+                    service_endpoint VARCHAR,
+                    service_port INTEGER,
+                    service_downtime TIME,
+                    service_paused BOOLEAN,
+                    service_failed BOOLEAN,
+                    service_last_test TIMESTAMP
+                    group_id INTEGER,
+                    host_id INTEGER
+                )"
+            ];
+
+            foreach ($queries as $q) {
+                $sql->exec($q);
+            }
         }
         catch (Exception $e) {
-            $this->statusMessage = $e;
-            $this->writeJSON(500);
-        }
-        
-        $sql->exec("create table if not exists api_usage(id int(8), ip varchar(64), time int(16));");
+            $this->statusMessage = $e->getMessage();
+            $this->writeJSON(503);
+        }        
     }
 
     /**
@@ -170,11 +214,16 @@ class Api
      */
     private function checkApiUsage() 
     {
-        return 0;       
+        $sql = new SQLite(DATABASE_FILE);
+        //$sql->exec("INSERT INTO api_usage VALUES ('', )");
+
+        return $sql->exec("SELECT * FROM api_usage");       
     }
 
     /**
      * entrypoint for all API calls
+     * 
+     * @return void
      */
     private function handleRequest() 
     {
@@ -188,11 +237,19 @@ class Api
 	    case 'GetSystemStatus':
 	    	$sql = new SQLite(DATABASE_FILE);
 
+            // list tables
+            $tablesquery = $sql->query("SELECT name FROM sqlite_master WHERE type='table';");
+            while ($table = $tablesquery->fetchArray(SQLITE3_ASSOC)) {
+            if ($table['name'] != "sqlite_sequence") {
+                $tables[] = $table['name'];
+            }
+    }
 	    	$this->engineOutput = [
                 "remote_address" => $_SERVER["REMOTE_ADDR"],
                 "curl_version" => \curl_version()["version"] ?? null,
                 "sqlite_version" => $sql->version() ?? null,
-                "system_load" => sys_getloadavg() ?? null
+                "system_load" => sys_getloadavg() ?? null,
+                "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
 		    ];
 
 	        $this->writeJSON();

@@ -8,6 +8,18 @@
  * @license MIT
  */
 
+/**
+ * @OA\Info(
+ *      title="tiny-monitor REST API", 
+ *      version="2.0",
+ *      @OA\Contact(
+ *          name="krustowski",
+ *          email="tmv2@n0p.cz"
+ *      )
+ * )
+ * @OA\Server(url="http://localhost/api/v2/")
+ */
+
 namespace tinyMonitor;
 
 use Exception;
@@ -266,38 +278,58 @@ class Api
     private function handleRequest() 
     {
         switch ($this->routePath[0]) {
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetStatusAllTest",
+             *     summary="run the example curl execution",
+             *     @OA\Response(
+             *          response="200", 
+             *          description="list of all services defined + their curl output")
+             * )
+             */
             case 'GetStatusAllTest':
                 //$engine = new Engine();
                 $this->engineOutput = Engine::checkSite($this->testSites); //$engine->checkSite($this->testSites);
                 $this->writeJSON();
                 break;
 
-	    case 'GetSystemStatus':
-	    	$sql = new SQLite(DATABASE_FILE);
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetSystemStatus",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
+             */
+            case 'GetSystemStatus':
+                $sql = new SQLite(DATABASE_FILE);
 
-            // list tables
-            $tablesquery = $sql->query("SELECT name FROM sqlite_master WHERE type='table';");
-            while ($table = $tablesquery->fetchArray(SQLITE3_ASSOC)) {
-                if ($table['name'] != "sqlite_sequence") {
-                    $tables[] = $table['name'];
+                // list tables
+                $tablesquery = $sql->query("SELECT name FROM sqlite_master WHERE type='table';");
+                while ($table = $tablesquery->fetchArray(SQLITE3_ASSOC)) {
+                    if ($table['name'] != "sqlite_sequence") {
+                        $tables[] = $table['name'];
+                    }
                 }
-            }
-	    	$this->engineOutput = [
-                "remote_address" => $this->remoteAddress,
-                "curl_version" => \curl_version()["version"] ?? null,
-                "sqlite_version" => $sql->version()["version_string"] ?? null,
-                "system_load" => \sys_getloadavg() ?? null,
-                "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
-		    ];
+                $this->engineOutput = [
+                    "remote_address" => $this->remoteAddress,
+                    "curl_version" => \curl_version()["version"] ?? null,
+                    "sqlite_version" => $sql->version()["version_string"] ?? null,
+                    "system_load" => \sys_getloadavg() ?? null,
+                    "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
+                ];
 
-	        $this->writeJSON();
-	    	break;
+                $this->writeJSON();
+                break;
 
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetStatus",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
+             */
             case 'GetStatus':
                 $sites = $this->testSites;
 
                 //$this->engineOutput = Engine\getStatus();
-
                 foreach ($sites as $site) {
                     array_push($this->engineOutput, [
                         "hash" => hash("sha256", $site),
@@ -310,10 +342,16 @@ class Api
                 $this->writeJSON();
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetDetail",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
+             */
             case 'GetDetail':
                 if (empty($this->routePath[1])) {
                     $this->statusMessage = "Hash list is required for this function!";
-                    $this->writeJSON(400);
+                    $this->writeJSON(code: 400);
                 }
 
                 $list = explode(",", $this->routePath[1]);
@@ -341,28 +379,25 @@ class Api
                     ]);
                 }
 
-                case 'Post':
-                    break;
-
                 //$this->engineOutput = Engine\getDetail($list);
                 $this->writeJSON();
                 break;
 
             /**
-             * POST /AddSite
-             * 
-             * @param string $url site URL
-             * @param int $port site custom port (optional)
+             * @OA\Get(
+             *     path="/api/v2/AddHost",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
              */
-            case 'AddSite':
-                break;
+            case 'AddHost':
+                    break;
 
             case 'AddService':
-                break;
-            
+                    break;
+                
             default:
                 $this->statusMessage = "Unknown function. Please, see API documentation.";
-                $this->writeJSON(404);
+                $this->writeJSON(code: 404);
                 break;
         }
     }

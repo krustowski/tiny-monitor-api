@@ -10,6 +10,8 @@
 
 namespace tinyMonitor;
 
+use \SQLite3 as SQLite;
+
 /**
  * Engine class
  * contains all core methods and vars

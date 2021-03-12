@@ -18,6 +18,8 @@ class Engine
 {    
     private function getSites() : array
     {
+        $sql = new SQLite(DATABASE_FILE);
+
         return [
             "hash1" => "https://api.n0p.cz",
             "hash2" => "https://mon.n0p.cz"
@@ -98,8 +100,8 @@ class Engine
 			"status" => "failed"
 		]; // TODO
 	    } else {
-                $gotInfo = curl_getinfo($handle);
-		$gotInfo["hash"] = $hash;
+            $gotInfo = curl_getinfo($handle);
+		    $gotInfo["hash"] = $hash;
 	    }
 
 	    $engineOutput[] = $gotInfo;

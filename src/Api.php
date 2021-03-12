@@ -122,7 +122,6 @@ class Api
         $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
-        $this->supervisorApiKey = getenv('SUPERVISOR_APIKEY');
 	    
         $this->checkDatabase();
         $this->checkApiUsage();
@@ -197,7 +196,7 @@ class Api
                 "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated) VALUES (
                     0, 
                     'supervisor', 
-                    '" . $this->supervisorApiKey . "',
+                    '" . SUPERVISOR_APIKEY . "',
                     1
                     )",
                 "CREATE TABLE IF NOT EXISTS monitor_hosts(

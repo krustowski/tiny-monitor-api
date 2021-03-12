@@ -11,7 +11,8 @@
     ],
     "require": {
         "cheprasov/php-redis-client": "^1.10",
-        "tracy/tracy": "^2.8"
+        "tracy/tracy": "^2.8",
+        "zircote/swagger-php": "^3.1"
     },
     "autoload": {
         "psr-4": {

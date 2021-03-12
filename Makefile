@@ -2,6 +2,8 @@
 
 -include .env
 
+DOCKER_EXEC_COMMAND=bash
+
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
 ifneq (,$(findstring xterm,${TERM}))
@@ -31,9 +33,11 @@ all: info
 info:
 	@echo "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
 
-	@echo "${YELLOW} make config${RESET}  \t configure the local environment"
+	@echo "${YELLOW} make config${RESET}  \t check the local environment (to develop/deploy)"
 	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
-	@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
+	@echo "${YELLOW} make test${RESET}  \t test the application/container"
+	@echo "${YELLOW} make exec${RESET}  \t execute command in container (def. bash)"
+	@echo "${YELLOW} make call${RESET}  \t make an API call\n"
 #@echo "${YELLOW} make build${RESET} \t build core image"
 #@echo "${YELLOW} make redeploy${RESET} \t rebuild image, restart and test the container\n"
 #@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
@@ -57,6 +61,10 @@ run:
 test:
 	@echo "\n${YELLOW} Testing the application/container ...${RESET}\n"
 	@bash ./bin/test.sh
+
+exec:
+	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
+	@`which docker` exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
 
 errorlog:
 	@echo "\n${YELLOW} Docker logs ...${RESET}\n"

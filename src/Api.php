@@ -34,7 +34,7 @@ class Api
 {
     // API header vars
     private $apiName = "tiny-monitor REST API";
-    private $apiVersion = "v1";
+    private $apiVersion = "2.0";
     private $apiUsage = 0;
     private $apiTimestampStart;
     private $remoteAddress;
@@ -50,7 +50,7 @@ class Api
     private $apiKey;
     private $safeGET = [];
     //private $safePOST = [];
-    //private $dataPayload = [];
+    private $payload = [];
 
     private $supervisorApiKey;
 
@@ -139,13 +139,19 @@ class Api
         $this->checkApiUsage();
 
         // cleanse HTTP requests
-        $this->safeGET = (array) array_map("htmlspecialchars", $_GET);
-        $this->safePOST = (array) array_map("htmlspecialchars", $_POST);
+        $this->safeGET  = array_map("htmlspecialchars", $_GET);
+        $this->safePOST = array_map("htmlspecialchars", $_POST);
 
         $this->checkApiKey();
 
         // POST data, payload
-        $this->dataPayload = json_decode(file_get_contents('php://input'), self::JSON_ASSOCIATIVE) ?? null;
+        try {
+            $json = file_get_contents('php://input');
+            $this->payload = json_decode($json, self::JSON_ASSOCIATIVE);
+        } catch (Exception $e) {
+            $this->statusMessage = $e;
+            $this->writeJSON(code: 406);
+        }
 
         // explode over full path query variable
         $this->routePath = explode('/', $this->safeGET["fullPath"]) ?? null;
@@ -243,7 +249,7 @@ class Api
     }
 
     /**
-     * checks Redis cache for API usage
+     * reads  for API usage
      * 
      * @return void
      */
@@ -309,6 +315,7 @@ class Api
                         $tables[] = $table['name'];
                     }
                 }
+
                 $this->engineOutput = [
                     "remote_address" => $this->remoteAddress,
                     "curl_version" => \curl_version()["version"] ?? null,
@@ -348,7 +355,7 @@ class Api
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
-            case 'GetDetail':
+            case 'GetStatusDetail':
                 if (empty($this->routePath[1])) {
                     $this->statusMessage = "Hash list is required for this function!";
                     $this->writeJSON(code: 400);
@@ -358,7 +365,7 @@ class Api
 
                 // LASAGNA only!
                 foreach($list as $item) {
-                    \array_push($this->engineOutput, [
+                    $this->engineOutput[] = [
                         "hash" => $item,
                         "time" => '$last_metering',
                         "downtime" => '$downtime',
@@ -376,10 +383,73 @@ class Api
                         "roundtrip14" => '$roundtrip14',
                         "roundtrip7" => '$roundtrip7',
                         "roundtrip1" => '$roundtrip1'
-                    ]);
+                    ];
                 }
 
                 //$this->engineOutput = Engine\getDetail($list);
+                $this->writeJSON();
+                break;
+
+            /**
+             * @OA\Post(
+             *     path="/api/v2/AddGroup",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
+             */
+            case 'AddGroup':
+                $data = $this->payload;
+
+                # XSS prevention?? sql-injection??
+                if (!$data || empty($data) || !$data["group_name"]) {
+                    $this->statusMessage = "Wrong JSON payload structure! Not parseable...";
+                    $this->writeJSON(code: 406);
+                }
+
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+
+                    $control_query = "SELECT COUNT(*) as count from monitor_groups WHERE group_name = '" . $data["group_name"] . "'";
+                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
+                    
+                    if ($num_rows > 0) {
+                        $this->statusMessage = "This group already exists!";
+                        $this->writeJSON(code: 406);
+                    }
+
+                    $sql->query("INSERT into monitor_groups (group_name) VALUES ('" . $data["group_name"] . "')");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+
+                $this->engineOutput = $data;
+                $this->writeJSON();
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetGroupList",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case "GetGroupList":
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+                    $res = $sql->query("SELECT group_name FROM monitor_groups");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+
+                // fetch rows
+                $rows = [];
+                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                    $rows[] = $row["group_name"];
+                }
+
+                $this->engineOutput = $rows;
                 $this->writeJSON();
                 break;
 

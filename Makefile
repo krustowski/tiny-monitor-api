@@ -38,7 +38,7 @@ endif
 export
 
 #
-# MAKE
+# TARGETS
 #
 
 all: info
@@ -48,7 +48,7 @@ info:
 
 	@echo "${YELLOW} make config${RESET}  \t check the local environment (to develop/deploy)"
 	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
-#@echo "${YELLOW} make test${RESET}  \t test the application/container"
+	@echo "${YELLOW} make test${RESET}  \t run unit tests on __existing__ container"
 	@echo "${YELLOW} make doc${RESET}  \t generate API documentation"
 	@echo "${YELLOW} make exec${RESET}  \t execute command in container (def. bash)"
 	@echo "${YELLOW} make call${RESET}  \t make an API call\n"
@@ -72,6 +72,12 @@ run:
 	@echo "\n${YELLOW} Starting the container ...${RESET}\n"
 	@docker-compose up --detach
 
+test: 
+	@echo "\n${YELLOW} Running unit tests ...${RESET}\n"
+	@bash ./bin/test.sh 
+
+doc: info
+
 call:
 	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
 	@bash ./bin/call.sh 
@@ -83,6 +89,6 @@ exec:
 errorlog:
 	@echo "\n${YELLOW} Docker logs ...${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
+
 	@echo "\n${YELLOW} Nginx error.log ...${RESET}\n"
 	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
-

@@ -2,6 +2,11 @@
 
 ## Makefile
 
+Show the structure of Makefile targets
+```
+make
+```
+
 ### config
 
 Check and configure the host environment (docker, docker-compose, curl,...)
@@ -15,6 +20,13 @@ make config ENV=devel
 Deploy the app (build, run and test the image) to docker
 ```
 make deploy
+```
+
+### test
+
+Run unit tests – tries to run basic scenario with all API calls used at a time 
+```
+make test
 ```
 
 ### call

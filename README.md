@@ -1,18 +1,33 @@
 # Tiny Monitor API
 
-## Deploy (alpha)
+## Makefile
+
+### config
 
 Check and configure the host environment (docker, docker-compose, curl,...)
 ```
 make config
+make config ENV=devel
 ```
 
-Deploy the app (build, run and test the image)
+### deploy
+
+Deploy the app (build, run and test the image) to docker
 ```
 make deploy
 ```
 
-Test the app again, write other test and try them
+### call
+
+Test the API calls, even ones requiring the JSON payload!
 ```
-make test
+make call FUNCTION=GetSystemStatus
+make call FUNCTION=AddGroup JSON_FILE=test/AddGroup.json
+```
+
+### doc
+
+Generate API documentation to PDF
+```
+make doc
 ```

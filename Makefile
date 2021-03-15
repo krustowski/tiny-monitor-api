@@ -1,8 +1,15 @@
 # tiny-monitor-api Makefile
 
+#
+# VARS
+#
+
 -include .env
 
-DOCKER_EXEC_COMMAND=bash
+ENV?=deploy
+DOCKER_EXEC_COMMAND?=/bin/bash
+FUNCTION?=GetSystemStatus
+JSON_FILE?=''
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -28,6 +35,12 @@ else
 	RESET        := ""
 endif
 
+export
+
+#
+# MAKE
+#
+
 all: info
 
 info:
@@ -35,7 +48,8 @@ info:
 
 	@echo "${YELLOW} make config${RESET}  \t check the local environment (to develop/deploy)"
 	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
-	@echo "${YELLOW} make test${RESET}  \t test the application/container"
+#@echo "${YELLOW} make test${RESET}  \t test the application/container"
+	@echo "${YELLOW} make doc${RESET}  \t generate API documentation"
 	@echo "${YELLOW} make exec${RESET}  \t execute command in container (def. bash)"
 	@echo "${YELLOW} make call${RESET}  \t make an API call\n"
 #@echo "${YELLOW} make build${RESET} \t build core image"
@@ -46,7 +60,7 @@ config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
 	@bash ./bin/config.sh
 
-deploy: build run test
+deploy: build run call
 
 build:
 	@echo "\n${YELLOW} Building the image ...${RESET}\n"
@@ -58,13 +72,13 @@ run:
 	@echo "\n${YELLOW} Starting the container ...${RESET}\n"
 	@docker-compose up --detach
 
-test:
-	@echo "\n${YELLOW} Testing the application/container ...${RESET}\n"
-	@bash ./bin/test.sh
+call:
+	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
+	@bash ./bin/call.sh 
 
 exec:
 	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
-	@`which docker` exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
+	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
 
 errorlog:
 	@echo "\n${YELLOW} Docker logs ...${RESET}\n"

@@ -1,18 +1,21 @@
 #!/bin/bash
 
-RED=$(tput setaf 1)
-GREEN=$(tput setaf 2)
-BLUE=$(tput setaf 6)
-RESET=$(tput sgr0)
+#
+# VARS
+#
+
+DEVEL_TOOLS=""
+
+[[ -n ${ENV} && ${ENV} == "devel" ]] && DEVEL_TOOLS=(sqlite3)
 
 TOOLS=(
     docker-compose
     docker
     curl
-    sqlite3
+    ${DEVEL_TOOLS}
 )
 
-FAILS=0
+FAILS_N=0
 
 #
 # CHECK
@@ -22,11 +25,11 @@ for t in ${TOOLS[@]}; do
     printf "${BLUE} Checking '${t}' ...${RESET}"
     [[ ( -f $(which ${t}) ) && ( $(${t} --version) ) ]] \
         && echo "${GREEN} ok${RESET}" && continue \
-        || echo "${RED} failed${RESET} (missing or not running)"; FAILS=$((FAILS+1));
+        || echo "${RED} failed${RESET} (missing or not running)"; FAILS_N=$((FAILS_N+1));
 done
 
 printf "\n"
-[[ ${FAILS} -eq 0 ]] && exit 0
+[[ ${FAILS_N} -eq 0 ]] && exit 0
 
 #
 # CONFIGURE

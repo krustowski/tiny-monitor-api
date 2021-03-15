@@ -8,15 +8,13 @@
  * @license MIT
  */
 
-namespace tinyMonitor;
+//namespace tinyMonitor;
 
-use \SQLite3 as SQLite;
+//use \SQLite3 as SQLite;
 
 // TODO
-// public status page from public variables
+// public status page from public variables == __very__ simple TMv2 client
 // public hosts very basic statuspage
-
-// simple TMv2 client
 
 // curl + curlopts + public apikey
 

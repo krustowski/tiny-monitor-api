@@ -8,7 +8,7 @@
  * @license MIT
  */
 
- // OpenAPI API documentation experiment
+ // OpenAPI API + swagger documentation experiment
 
 require(__DIR__ . "/../vendor/autoload.php");
 

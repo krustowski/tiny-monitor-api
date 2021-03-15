@@ -6,13 +6,19 @@
 
 DEVEL_TOOLS=""
 
-[[ -n ${ENV} && ${ENV} == "devel" ]] && DEVEL_TOOLS=(sqlite3)
+if [[ -n ${ENV} && ${ENV} == "devel" ]]; then 
+    DEVEL_TOOLS=(
+        php
+        sqlite3
+    );
+fi
 
 TOOLS=(
     docker-compose
     docker
     curl
-    ${DEVEL_TOOLS}
+    composer
+    ${DEVEL_TOOLS[@]}
 )
 
 FAILS_N=0

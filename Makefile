@@ -46,15 +46,16 @@ all: info
 info:
 	@echo "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
 
-	@echo "${YELLOW} make config${RESET}  \t check the local environment (to develop/deploy)"
+	@echo "${YELLOW} make config${RESET} \t check the local environment (to develop/deploy)"
 	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
-	@echo "${YELLOW} make test${RESET}  \t run unit tests on __existing__ container"
-	@echo "${YELLOW} make doc${RESET}  \t generate API documentation"
-	@echo "${YELLOW} make exec${RESET}  \t execute command in container (def. bash)"
-	@echo "${YELLOW} make call${RESET}  \t make an API call\n"
+	@echo "${YELLOW} make test${RESET}   \t run unit tests on __existing__ container\n"
+	
+	@echo "${YELLOW} make doc${RESET}    \t generate API documentation"
+	@echo "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
+	@echo "${YELLOW} make call${RESET}   \t make an API call"
+	@echo "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 #@echo "${YELLOW} make build${RESET} \t build core image"
 #@echo "${YELLOW} make redeploy${RESET} \t rebuild image, restart and test the container\n"
-#@echo "${YELLOW} make test${RESET}  \t test the application/container\n"
 
 config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
@@ -76,7 +77,9 @@ test:
 	@echo "\n${YELLOW} Running unit tests ...${RESET}\n"
 	@bash ./bin/test.sh 
 
-doc: info
+doc: 
+	@echo "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
+	@exit 1
 
 call:
 	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
@@ -86,7 +89,7 @@ exec:
 	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
 	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
 
-errorlog:
+log:
 	@echo "\n${YELLOW} Docker logs ...${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
 

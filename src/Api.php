@@ -6,9 +6,7 @@
  * @author krustowski <k@n0p.cz>
  * @author mxdpeep <f@mxd.cz>
  * @license MIT
- */
-
-/**
+ *
  * @OA\Info(
  *      title="tiny-monitor REST API", 
  *      version="2.0",
@@ -401,7 +399,7 @@ class Api
 
                 # XSS prevention?? sql-injection??
                 if (!$data || empty($data) || !$data["group_name"]) {
-                    $this->statusMessage = "Wrong JSON payload structure! Not parseable...";
+                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
                     $this->writeJSON(code: 406);
                 }
 
@@ -413,7 +411,7 @@ class Api
                     
                     if ($num_rows > 0) {
                         $this->statusMessage = "This group already exists!";
-                        $this->writeJSON(code: 406);
+                        $this->writeJSON(code: 403);
                     }
 
                     $sql->query("INSERT into monitor_groups (group_name) VALUES ('" . $data["group_name"] . "')");
@@ -455,8 +453,28 @@ class Api
 
             /**
              * @OA\Get(
+             *     path="/api/v2/SetGroupDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'SetGroupDetail':
+                break;
+
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/DeleteGroup",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'DeleteGroup':
+                break;
+
+
+            /**
+             * @OA\Get(
              *     path="/api/v2/AddHost",
-             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             *     @OA\Response(response="200", description="")
              * )
              */
             case 'AddHost':
@@ -490,7 +508,7 @@ class Api
             "api_quota_hourly" => self::API_USAGE_LIMIT,
             "api_usage_hourly" => $this->apiUsage,
             "function" => $function,
-            "message" => $this->statusMessage ?? self::HTTP_CODE[$code] ?? "DATA OK",
+            "message" => $this->statusMessage ?? self::HTTP_CODE[$code],
             "status_code" => $code
         ];
 

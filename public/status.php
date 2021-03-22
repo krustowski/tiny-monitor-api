@@ -8,16 +8,13 @@
  * @license MIT
  */
 
-//namespace tinyMonitor;
-
-//use \SQLite3 as SQLite;
-
 // TODO
 // public status page from public variables == __very__ simple TMv2 client
 // public hosts very basic statuspage
 
 // curl + curlopts + public apikey
 
+$publicKey = "";
 $endpoint = "localhost/api/v2/GetPublicStatus?apikey=$publicKey";
 
 $userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;

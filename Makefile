@@ -43,7 +43,7 @@ export
 # TARGETS
 #
 
-.PHONY: all test clean src public bin docker vendor
+.PHONY: all test clean src public bin docker vendor doc
 
 all: info
 
@@ -58,14 +58,17 @@ info:
 	@echo "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
 	@echo "${YELLOW} make call${RESET}   \t make an API call"
 	@echo "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
-#@echo "${YELLOW} make build${RESET} \t build core image"
-#@echo "${YELLOW} make redeploy${RESET} \t rebuild image, restart and test the container\n"
 
 config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
 	@bash `pwd`/bin/config.sh
 
-deploy: composer build run call
+deploy: composer key build run call
+
+key:
+	@echo "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
+	@export SUPERVISOR_APIKEY=$(ls -lR | printf "\- $(date +%s) \-" | sha512sum --zero --binary | cut -d' ' -f1)
+	@echo " New SUPERVISOR_APIKEY=${SUPERVISOR_APIKEY}"
 
 composer:
 	@echo "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"
@@ -91,7 +94,7 @@ doc:
 
 call:
 	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
-	@bash ${ROOT_DIR}/bin/call.sh 
+	@bash `pwd`/bin/call.sh 
 
 exec:
 	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"

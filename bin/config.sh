@@ -4,6 +4,10 @@
 # VARS
 #
 
+[[ -z ${RUN_FROM_MAKEFILE} ]] && \
+    echo "This script has to be run by 'make test'!" &&
+    exit 1
+
 DEVEL_TOOLS=""
 
 if [[ -n ${ENV} && ${ENV} == "devel" ]]; then 
@@ -19,6 +23,7 @@ TOOLS=(
     curl
     composer
     jq
+    sha512sum
     ${DEVEL_TOOLS[@]}
 )
 

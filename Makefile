@@ -65,7 +65,11 @@ config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
 	@bash `pwd`/bin/config.sh
 
-deploy: build run call
+deploy: composer build run call
+
+composer:
+	@echo "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"
+	@composer install
 
 build:
 	@echo "\n${YELLOW} Building the image ...${RESET}\n"

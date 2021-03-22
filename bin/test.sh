@@ -5,26 +5,34 @@
 #
 
 [[ -z ${RUN_FROM_MAKEFILE} ]] && \
-    echo "This script has to be run by 'make'!" &&
+    echo "This script has to be run by 'make test'!" &&
     exit 1
 
 function call() {
-    [[ -z ${FUNCTION} ]] && \
-        echo "No function specified!" && \
-        return 1
+    [[ -z $1 ]] \
+        && echo "Function not specified!" \
+        && return 1
 
-    [[ -f ${JSON_FILE} ]] \
-        && PAYLOAD="$(cat ${JSON_FILE})" \
+    FUNCTION=$1
+
+    [[ -z $2 ]] \
+        && echo "Expected output not specified!" \
+        && return 1
+
+    EXPECTED=$2
+
+    [[ -n $3 && -f $3 ]] \
+        && PAYLOAD="$(cat $3)" \
         || PAYLOAD='{}'
 
-    echo -e "\n ${BLUE}Calling ${FUNCTION} ...${RESET}\n"
+    echo -e "\n ${BLUE}Calling ${FUNCTION} (expecting: ${EXPECTED})...${RESET}\n"
 
     ENDPOINT="http://localhost:${TM_API_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
     curl -sL -d "${PAYLOAD}" ${ENDPOINT} | echo " $(jq '.api.message')"
 
     unset FUNCTION PAYLOAD && \
         printf "\n" && \
-        sleep 2
+        sleep 1.5
 }
 
 #
@@ -33,205 +41,140 @@ function call() {
 
 # get system status
 
-#call GetSystemStatus
-
-FUNCTION=GetSystemStatus \
-    call 
+call GetSystemStatus "ok"
 
 # create group, get GROUP_ID
 
-#call AddGroup test/AddGroup.json
-
-FUNCTION=AddGroup \
-    JSON_FILE=test/AddGroup.json \
-    call 
+call AddGroup "ok" test/AddGroup.json
 
 # create the same => already exists
 
-FUNCTION=AddGroup \
-    JSON_FILE=test/AddGroup.json \
-    call
+call AddGroup "exists!" test/AddGroup.json
 
 # get group detail
 
-FUNCTION=GetGroupDetail \
-    call
+call GetGroupDetail "ok"
 
 # rename group
 
-FUNCTION=SetGroupDetail \
-    JSON_FILE=test/SetGroupDetail.json \
-    call
+call SetGroupDetail "ok" test/SetGroupDetail.json
 
 # get group detail
 
-FUNCTION=GetGroupDetail \
-    call
+call GetGroupDetail "ok"
 
 # list groups
 
-FUNCTION=GetGroupList \
-    call
+call GetGroupList "ok"
 
 # create user, get APIKEY, USER_ID
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call AddUser "ok" test/AddUser.json
 
 # create the same => already exists
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call AddUser "exists!" test/AddUser.json
 
 # get user detail
 
-FUNCTION=GetUserDetail \
-    call
+call GetUserDetail "ok"
 
 # rename user, change GROUP_ID, acl,...
 
-FUNCTION=SetUserDetail \
-    JSON_FILE=test/SetUserDetail.json \
-    call
+call SetUserDetail "ok" test/SetUserDetail.json
 
 # get user detail
 
-FUNCTION=GetUserDetail \
-    call
+call GetUserDetail "ok"
 
 # add host, get HOST_ID
 
-FUNCTION=AddHost \
-    JSON_FILE=test/AddHost.json \
-    call
+call AddHost "ok" test/AddHost.json
 
 # create the same => already exists
 
-FUNCTION=AddHost \
-    JSON_FILE=test/AddHost.json \
-    call
+call AddHost "exists!" test/AddHost.json
 
 # get host detail
 
-FUNCTION=GetHostDetail \
-    call
+call GetHostDetail "ok"
 
 # rename host, reset GROUP_ID
 
-FUNCTION=SetHostDetail \
-    JSON_FILE=test/SetHostDetail.json \
-    call
+call SetHostDetail "ok" test/SetHostDetail.json
 
 # get host detail
 
-FUNCTION=GetHostDetail \
-    call
+call GetHostDetail "ok"
 
 # add service, get SERVICE_ID
 
-FUNCTION=AddService \
-    JSON_FILE=test/AddService.json \
-    call
+call AddService "ok" test/AddService.json 
 
 # create the same => already exists
 
-FUNCTION=AddService \
-    JSON_FILE=test/AddService.json \
-    call
+call AddService "exists!" test/AddService.json 
 
 # get service detail
 
-FUNCTION=GetServiceDetail \
-    call
+call GetServiceDetail "ok"
 
 # change service, set HOST_ID
 
-FUNCTION=SetServiceDetail \
-    JSON_FILE=test/SetServiceDetail.json \
-    call
+call SetServiceDetail "ok" test/SetServiceDetail.json
 
 # get service detail
 
-FUNCTION=GetServiceDetail \
-    JSON_FILE=test/GetServiceDetail.json \
-    call
+call GetServiceDetail "ok"
 
 # run test on service as USER_ID (APIKEY)
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call TestService "ok" test/TestService.json
 
 # get service status
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call GetServiceStatus "ok"
 
 # get service status detail
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call GetServiceStatusDetail "ok"
 
 # change activated on service
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call SetServiceDetail "ok" test/SetServiceDetailDisable.json
 
 # run the same test => fail on inactive service
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call TestService "fail!" test/TestService.json
 
 # remove service
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteService "ok" test/DeleteService.json
 
 # remove service => not exists
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteService "not exists!" test/DeleteService.json
 
 # remove host
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteHost "ok" test/DeleteHost.json
 
 # remove host => not exists
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteHost "not exists!" test/DeleteHost.json
 
 # remove user
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteUser "ok" test/DeleteUser.json
 
 # remove user => not exists
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteUser "not exists!" test/DeleteUser.json
 
 # remove group
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteGroup "ok" test/DeleteGroup.json
 
 # remove group => not exists
 
-FUNCTION=AddUser \
-    JSON_FILE=test/AddUser.json \
-    call
+call DeleteGroup "not exists!" test/DeleteGroup.json

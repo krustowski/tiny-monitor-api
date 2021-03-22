@@ -316,8 +316,9 @@ class Api
 
                 $this->engineOutput = [
                     "remote_address" => $this->remoteAddress,
+		    "php_version" => phpversion() ?? null,
                     "curl_version" => \curl_version()["version"] ?? null,
-                    "sqlite_version" => $sql->version()["version_string"] ?? null,
+                    "sqlite_version" => $sql->version()["versionString"] ?? null,
                     "system_load" => \sys_getloadavg() ?? null,
                     "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
                 ];

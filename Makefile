@@ -10,6 +10,8 @@ ENV?=deploy
 DOCKER_EXEC_COMMAND?=/bin/bash
 FUNCTION?=GetSystemStatus
 JSON_FILE?=''
+RUN_FROM_MAKEFILE?=true
+ROOT_DIR=`pwd`
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -41,6 +43,8 @@ export
 # TARGETS
 #
 
+.PHONY: all test clean src public bin docker vendor
+
 all: info
 
 info:
@@ -59,7 +63,7 @@ info:
 
 config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
-	@bash ./bin/config.sh
+	@bash `pwd`/bin/config.sh
 
 deploy: build run call
 
@@ -75,7 +79,7 @@ run:
 
 test: 
 	@echo "\n${YELLOW} Running unit tests ...${RESET}\n"
-	@bash ./bin/test.sh 
+	@bash `pwd`/bin/test.sh 
 
 doc: 
 	@echo "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
@@ -83,7 +87,7 @@ doc:
 
 call:
 	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
-	@bash ./bin/call.sh 
+	@bash ${ROOT_DIR}/bin/call.sh 
 
 exec:
 	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"

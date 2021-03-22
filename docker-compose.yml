@@ -8,7 +8,7 @@ services:
     restart: unless-stopped
     ports:
       - target: 80
-        published: ${API_PORT}
+        published: ${TM_API_PORT}
         mode: host
         protocol: tcp
     networks: 

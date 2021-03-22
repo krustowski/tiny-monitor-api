@@ -18,6 +18,7 @@ TOOLS=(
     docker
     curl
     composer
+    jq
     ${DEVEL_TOOLS[@]}
 )
 

@@ -1,2 +1,2 @@
-Krystof Sara <k@n0p.cz> project owner
-Fred Brooker <f@mxd.cz> programmer
+krustowski <k@n0p.cz> project owner
+mxdpeep <f@mxd.cz> programmer

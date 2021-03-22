@@ -26,7 +26,8 @@ RUN rm -f /etc/nginx/http.d/* && \
     ln -s ${APP_ROOT}/docker/tiny-monitor-api-nginx.conf /etc/nginx/http.d/ 
 RUN mkdir /run/nginx && \
     chown nginx:nginx /run/nginx && \
-    nginx -t
+    nginx -t && \
+    php-fpm8 -t
 
 # final cmd batch
 WORKDIR ${APP_ROOT}

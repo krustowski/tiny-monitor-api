@@ -316,7 +316,7 @@ class Api
 
                 $this->engineOutput = [
                     "remote_address" => $this->remoteAddress,
-		    "php_version" => phpversion() ?? null,
+                    "php_version" => phpversion() ?? null,
                     "curl_version" => \curl_version()["version"] ?? null,
                     "sqlite_version" => $sql->version()["versionString"] ?? null,
                     "system_load" => \sys_getloadavg() ?? null,

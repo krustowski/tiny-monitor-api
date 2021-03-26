@@ -4,7 +4,6 @@
  * tiny-monitor-api
  * 
  * @author krustowski <k@n0p.cz>
- * @author mxdpeep <f@mxd.cz>
  * @license MIT
  *
  * @OA\Info(
@@ -12,7 +11,7 @@
  *      version="2.0",
  *      @OA\Contact(
  *          name="krustowski",
- *          email="tmv2@n0p.cz"
+ *          email="tiny-monitor@n0p.cz"
  *      )
  * )
  * @OA\Server(url="http://localhost/api/v2/")
@@ -28,7 +27,7 @@ use \SQLite3 as SQLite;
  * 
  * contains request handling methods
  */
-class Api 
+class Api
 {
     // API header vars
     private $apiName = "tiny-monitor REST API";
@@ -214,7 +213,7 @@ class Api
                     'supervisor', 
                     '" . SUPERVISOR_APIKEY . "',
                     1
-                    )",
+                )",
                 "CREATE TABLE IF NOT EXISTS monitor_hosts(
                     host_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     host_type VARCHAR,
@@ -281,7 +280,9 @@ class Api
      */
     private function handleRequest() 
     {
-        switch ($this->routePath[0]) {
+        $function = $this->routePath[0];
+
+        switch ($function) {
             /**
              * @OA\Get(
              *     path="/api/v2/GetStatusAllTest",
@@ -300,7 +301,7 @@ class Api
             /**
              * @OA\Get(
              *     path="/api/v2/GetSystemStatus",
-             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             *     @OA\Response(response="200", description="")
              * )
              */
             case 'GetSystemStatus':
@@ -459,8 +460,8 @@ class Api
              * )
              */
             case 'SetGroupDetail':
+                $this->writeJSON();
                 break;
-
 
             /**
              * @OA\Get(
@@ -469,8 +470,8 @@ class Api
              * )
              */
             case 'DeleteGroup':
+                $this->writeJSON();
                 break;
-
 
             /**
              * @OA\Get(
@@ -479,10 +480,66 @@ class Api
              * )
              */
             case 'AddHost':
-                    break;
+                $data = $this->payload;
+
+                # XSS prevention?? sql-injection??
+                if (!$data || empty($data) || !$data["host_name"]) {
+                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+                    $this->writeJSON(code: 406);
+                }
+
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+
+                    $control_query = "SELECT COUNT(*) as count from monitor_hosts WHERE host_name = '" . $data["host_name"] . "'";
+                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
+                    
+                    if ($num_rows > 0) {
+                        $this->statusMessage = "This host already exists!";
+                        $this->writeJSON(code: 403);
+                    }
+
+                    $sql->query("INSERT into monitor_hosts (host_name) VALUES ('" . $data["host_name"] . "')");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+
+                $this->engineOutput = $data;
+                $this->writeJSON();
+                break;
 
             case 'AddService':
-                    break;
+                $data = $this->payload;
+
+                # XSS prevention?? sql-injection??
+                if (!$data || empty($data) || !$data["service_name"]) {
+                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+                    $this->writeJSON(code: 406);
+                }
+
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+
+                    $control_query = "SELECT COUNT(*) as count from monitor_services WHERE service_name = '" . $data["group_name"] . "'";
+                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
+                    
+                    if ($num_rows > 0) {
+                        $this->statusMessage = "This service already exists!";
+                        $this->writeJSON(code: 403);
+                    }
+
+                    $sql->query("INSERT into monitor_service (service_name) VALUES ('" . $data["service_name"] . "')");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+
+                $this->engineOutput = $data;
+                $this->writeJSON();
+                break;
                 
             default:
                 $this->statusMessage = "Unknown function. Please, see API documentation.";

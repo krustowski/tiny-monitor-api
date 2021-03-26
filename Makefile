@@ -11,7 +11,7 @@ DOCKER_EXEC_COMMAND?=/bin/bash
 FUNCTION?=GetSystemStatus
 JSON_FILE?=''
 RUN_FROM_MAKEFILE?=true
-ROOT_DIR=`pwd`
+APIKEY_FILE=.supervisor_apikey
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -43,21 +43,22 @@ export
 # TARGETS
 #
 
-.PHONY: all test clean src public bin docker vendor doc
+.PHONY: all test clean src public bin vendor doc #Makefile Dockerfile docker*
 
 all: info
 
 info:
-	@echo "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
+	@echo -e "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
 
-	@echo "${YELLOW} make config${RESET} \t check the local environment (to develop/deploy)"
-	@echo "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
-	@echo "${YELLOW} make test${RESET}   \t run unit tests on __existing__ container\n"
+	@echo -e "${YELLOW} make config${RESET} \t check the local environment (to develop/deploy)"
+	@echo -e "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
+	@echo -e "${YELLOW} make test${RESET}   \t run unit tests on __existing__ container\n"
 	
-	@echo "${YELLOW} make doc${RESET}    \t generate API documentation"
-	@echo "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
-	@echo "${YELLOW} make call${RESET}   \t make an API call"
-	@echo "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
+	@echo -e "${YELLOW} make doc${RESET}    \t generate API documentation"
+#	@echo -e "${YELLOW} make scan${RESET}   \t scan built image for vulnerabilities (using snyk)"
+	@echo -e "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
+	@echo -e "${YELLOW} make call${RESET}   \t make an API call"
+	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
 config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
@@ -65,44 +66,43 @@ config:
 
 deploy: composer key build run call
 
-key:
-	@echo "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
-	@export SUPERVISOR_APIKEY=$(ls -lR | printf "\- $(date +%s) \-" | sha512sum --zero --binary | cut -d' ' -f1)
-	@echo " New SUPERVISOR_APIKEY=${SUPERVISOR_APIKEY}"
-
 composer:
-	@echo "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"
+	@echo -e "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"
 	@composer install
 
+key:
+	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
+	@bash `pwd`/bin/key.sh
+
 build:
-	@echo "\n${YELLOW} Building the image ...${RESET}\n"
+	@echo -e "\n${YELLOW} Building the image ...${RESET}\n"
 	@docker-compose build \
 		&& exit 0 \
 		|| echo "\n${RED} docker is not running!${RESET}\n"; exit 1
 
 run:
-	@echo "\n${YELLOW} Starting the container ...${RESET}\n"
+	@echo -e "\n${YELLOW} Starting the container ...${RESET}\n"
 	@docker-compose up --detach
 
 test: 
-	@echo "\n${YELLOW} Running unit tests ...${RESET}\n"
+	@echo -e "\n${YELLOW} Running unit tests ...${RESET}\n"
 	@bash `pwd`/bin/test.sh 
 
 doc: 
-	@echo "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
+	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
 	@exit 1
 
 call:
-	@echo "\n${YELLOW} Making the API call ...${RESET}\n"
+	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"
 	@bash `pwd`/bin/call.sh 
 
 exec:
-	@echo "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
+	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
 	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
 
 log:
-	@echo "\n${YELLOW} Docker logs ...${RESET}\n"
+	@echo -e "\n${YELLOW} Docker logs ...${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
 
-	@echo "\n${YELLOW} Nginx error.log ...${RESET}\n"
+	@echo -e "\n${YELLOW} Nginx error.log ...${RESET}\n"
 	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log

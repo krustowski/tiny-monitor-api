@@ -8,3 +8,4 @@
 Thumbs.db
 vendor/
 composer.phar
+.supervisor_apikey

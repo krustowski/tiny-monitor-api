@@ -8,6 +8,11 @@
     echo "This script has to be run by 'make test'!" &&
     exit 1
 
+[[ ! -f ${APIKEY_FILE} ]] \
+    && echo "API key file '${APIKEY_FILE}' not found! Run 'make deploy' and try again!"
+    
+export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE}) \
+
 function call() {
     [[ -z $1 ]] \
         && echo "Function not specified!" \
@@ -30,7 +35,7 @@ function call() {
     ENDPOINT="http://localhost:${TM_API_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
 
     # prefinal curl check
-    [[ $(curl -sL ${ENDPOINT}; echo $?) -gt 0 ]] && \
+    [[ $(curl -sL ${ENDPOINT} 2>&1 > /dev/null; echo $?) -gt 0 ]] && \
         echo -e " ${RED}cannot connect to API/API error ...${RESET}\n" && \
         exit 1
 

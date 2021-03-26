@@ -23,7 +23,7 @@ TOOLS=(
     curl
     composer
     jq
-    sha512sum
+    shasum
     ${DEVEL_TOOLS[@]}
 )
 

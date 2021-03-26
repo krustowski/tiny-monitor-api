@@ -13,8 +13,8 @@ services:
         protocol: tcp
     networks: 
       - tiny-monitor-net
-    environment:
-      SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
+    #environment:
+      #SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
 
 networks:
   tiny-monitor-net:

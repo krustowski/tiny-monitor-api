@@ -1,13 +1,12 @@
 # tiny-monitor-api Dockerfile
 #
 # krustowski <k@n0p.cz>
-# mxdpeep <f@n0p.cz> 
 
 FROM alpine:latest
 
-ENV APP_ROOT="/var/www/tiny-monitor-api"
-ENV TZ="Europe/Prague"
-ENV DATABASE_FILE="${APP_ROOT}/tiny_monitor_core.db"
+ENV APP_ROOT "/var/www/tiny-monitor-api"
+ENV TZ "Europe/Prague"
+ENV DATABASE_FILE "${APP_ROOT}/tiny_monitor_core.db"
 
 # install essentials
 RUN apk update && \

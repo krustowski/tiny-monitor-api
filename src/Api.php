@@ -662,6 +662,38 @@ class Api
         }
     }
 
+    private function addProperty(string $property, array $data = [])
+    {       
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+    }
+
+    private function setProperty(string $property, array $data = [])
+    {       
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+    }
+
+    private function getProperty(string $property, array $data = [])
+    {       
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+    }
+
+    private function deleteProperty(string $property, array $data = [])
+    {       
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+    }
+
     /**
      * API exit method -- outputs PRETTY JSON
      * 

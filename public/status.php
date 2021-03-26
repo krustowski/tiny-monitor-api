@@ -46,6 +46,7 @@ curl_close($curl_handle);
 ?>
 
 <!doctype html>
+<head>
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 <script src="//code.jquery.com/jquery-1.11.1.min.js"></script>
@@ -56,7 +57,9 @@ curl_close($curl_handle);
 
 <script src="//code.jquery.com/jquery.min.js"></script>
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
-  
+
+</head>
+<body>
   
   <div class="container">
       <div class="row">
@@ -68,7 +71,7 @@ curl_close($curl_handle);
           <div class="col-md-12 column">
               <div class="panel panel-warning">
                 <div class="panel-heading">
-                  <h3 class="panel-title">
+                  <h3 class="panel-title">s
                     Not All Systems Operational
                     <small class="pull-right">Refreshed 39 minutes ago</small>
                   </h3>
@@ -122,4 +125,7 @@ curl_close($curl_handle);
           </div>
       </div>
   </div>
+
+  </body>
+  </html>
   

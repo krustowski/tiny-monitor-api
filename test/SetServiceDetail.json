@@ -1,0 +1,14 @@
+{
+    "service_id": 0,
+    "service_name": "test-service-new",
+    "service_type": "http",
+    "service_endpoint": "mon.n0p.cz",
+    "service_port": 80,
+    "service_downtime": [],
+    "service_active": true,
+    "service_status": false,
+    "service_public": true,
+    "service_last_test": "",
+    "group_id": 0,
+    "host_id": 0
+}

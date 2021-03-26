@@ -137,7 +137,7 @@ class Api
 
         // cleanse HTTP requests
         $this->safeGET  = array_map("htmlspecialchars", $_GET);
-        $this->safePOST = array_map("htmlspecialchars", $_POST);
+        //$this->safePOST = array_map("htmlspecialchars", $_POST);
 
         $this->checkApiKey();
 
@@ -227,8 +227,9 @@ class Api
                     service_endpoint VARCHAR,
                     service_port INTEGER,
                     service_downtime TIME,
-                    service_paused BOOLEAN,
-                    service_failed BOOLEAN,
+                    service_active BOOLEAN,
+                    service_status BOOLEAN,
+                    service_public BOOLEAN,
                     service_last_test TIMESTAMP
                     group_id INTEGER,
                     host_id INTEGER
@@ -334,6 +335,28 @@ class Api
              * )
              */
             case 'GetStatus':
+                $sites = $this->testSites;
+
+                //$this->engineOutput = Engine\getStatus();
+                foreach ($sites as $site) {
+                    array_push($this->engineOutput, [
+                        "hash" => hash("sha256", $site),
+                        "url" => $site,
+                        "alive" => rand(0, 1),
+                        "time" => time() + (-1)^(rand(0, 1)) * rand(100, 500)
+                    ]);
+                }
+
+                $this->writeJSON();
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetPublicStatus",
+             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * )
+             */
+            case 'GetPublicStatus':
                 $sites = $this->testSites;
 
                 //$this->engineOutput = Engine\getStatus();
@@ -509,6 +532,77 @@ class Api
                 $this->engineOutput = $data;
                 $this->writeJSON();
                 break;
+            
+            case "GetHostList":
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+                    $res = $sql->query("SELECT host_name FROM monitor_hosts");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+        
+                // fetch rows
+                $rows = [];
+                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                    $rows[] = $row["host_name"];
+                }
+        
+                $this->engineOutput = $rows;
+                $this->writeJSON();
+                break;
+
+            case 'AddUser':
+                $data = $this->payload;
+    
+                # XSS prevention?? sql-injection??
+                if (!$data || empty($data) || !$data["user_name"]) {
+                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+                    $this->writeJSON(code: 406);
+                }
+    
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+    
+                    $control_query = "SELECT COUNT(*) as count from monitor_users WHERE user_name = '" . $data["user_name"] . "'";
+                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
+                        
+                    if ($num_rows > 0) {
+                        $this->statusMessage = "This user already exists!";
+                        $this->writeJSON(code: 403);
+                    }
+    
+                    $sql->query("INSERT into monitor_users (user_name) VALUES ('" . $data["user_name"] . "')");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+    
+                $this->engineOutput = $data;
+                $this->writeJSON();
+                break;
+
+            case "GetUserList":
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+                    $res = $sql->query("SELECT user_name FROM monitor_users");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+    
+                // fetch rows
+                $rows = [];
+                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                    $rows[] = $row["user_name"];
+                }
+    
+                $this->engineOutput = $rows;
+                $this->writeJSON();
+                break;
 
             case 'AddService':
                 $data = $this->payload;
@@ -522,7 +616,7 @@ class Api
                 try {
                     $sql = new SQLite(DATABASE_FILE);
 
-                    $control_query = "SELECT COUNT(*) as count from monitor_services WHERE service_name = '" . $data["group_name"] . "'";
+                    $control_query = "SELECT COUNT(*) as count from monitor_services WHERE service_name = '" . $data["service_name"] . "'";
                     $num_rows = $sql->query($control_query)->fetchArray()["count"];
                     
                     if ($num_rows > 0) {
@@ -530,7 +624,7 @@ class Api
                         $this->writeJSON(code: 403);
                     }
 
-                    $sql->query("INSERT into monitor_service (service_name) VALUES ('" . $data["service_name"] . "')");
+                    $sql->query("INSERT into monitor_services (service_name) VALUES ('" . $data["service_name"] . "')");
                 }
                 catch (Exception $e) {
                     $this->statusMessage = $e->getMessage();
@@ -538,6 +632,26 @@ class Api
                 }   
 
                 $this->engineOutput = $data;
+                $this->writeJSON();
+                break;
+
+            case "GetServiceList":
+                try {
+                    $sql = new SQLite(DATABASE_FILE);
+                    $res = $sql->query("SELECT service_name FROM monitor_services");
+                }
+                catch (Exception $e) {
+                    $this->statusMessage = $e->getMessage();
+                    $this->writeJSON(503);
+                }   
+    
+                // fetch rows
+                $rows = [];
+                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+                    $rows[] = $row["service_name"];
+                }
+    
+                $this->engineOutput = $rows;
                 $this->writeJSON();
                 break;
                 

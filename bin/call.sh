@@ -11,9 +11,7 @@
 [[ ! -f ${APIKEY_FILE} ]] \
     && echo "API key file '${APIKEY_FILE}' not found! Run 'make deploy' and try again!"
 
-export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE}) \
-
-echo $SUPERVISOR_APIKEY
+export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE})
 
 # load JSON file to PAYLOAD variable
 [[ -f ${JSON_FILE} ]] \

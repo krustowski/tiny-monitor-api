@@ -1,0 +1,9 @@
+{
+    "user_id": 1,
+    "user_name": "test-user-new",
+    "user_apikey": "",
+    "user_ip_address": "1.1.1.1",
+    "user_last_access": "",
+    "user_activated": true,
+    "group_id": 0
+}

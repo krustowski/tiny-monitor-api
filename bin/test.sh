@@ -11,7 +11,9 @@
 [[ ! -f ${APIKEY_FILE} ]] \
     && echo "API key file '${APIKEY_FILE}' not found! Run 'make deploy' and try again!"
     
-export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE}) \
+export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE})
+
+COUNTER=0
 
 function call() {
     [[ -z $1 ]] \
@@ -30,9 +32,10 @@ function call() {
         && PAYLOAD="$(cat $3)" \
         || PAYLOAD='{}'
 
-    echo -e "\n ${BLUE}Calling ${FUNCTION} (expecting: ${EXPECTED})...${RESET}\n"
-
     ENDPOINT="http://localhost:${TM_API_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
+    COUNTER=$((COUNTER+1))
+
+    echo -e "\n [${COUNTER}] ${BLUE}Calling ${FUNCTION} (expecting: ${EXPECTED})...${RESET}\n"
 
     # prefinal curl check
     [[ $(curl -sL ${ENDPOINT} 2>&1 > /dev/null; echo $?) -gt 0 ]] && \
@@ -40,7 +43,8 @@ function call() {
         exit 1
 
     # final call
-    curl -sL -d "${PAYLOAD}" ${ENDPOINT} | echo " $(jq '.api.message')"
+    curl -sL -d "${PAYLOAD}" ${ENDPOINT} | \
+        jq '. | "message: " + .api.message, .data'
 
     unset FUNCTION PAYLOAD && \
         printf "\n" && \
@@ -63,17 +67,17 @@ call AddGroup "ok" test/AddGroup.json
 # create the same => already exists
 call AddGroup "exists!" test/AddGroup.json
 
+# list groups
+call GetGroupList "ok"
+
 # get group detail
-call GetGroupDetail "ok"
+call GetGroupDetail "ok" test/GetGroupDetail.json
 
 # rename group
 call SetGroupDetail "ok" test/SetGroupDetail.json
 
 # get group detail
-call GetGroupDetail "ok"
-
-# list groups
-call GetGroupList "ok"
+call GetGroupDetail "ok" test/GetGroupDetail.json
 
 # create user, get APIKEY, USER_ID
 call AddUser "ok" test/AddUser.json
@@ -81,14 +85,17 @@ call AddUser "ok" test/AddUser.json
 # create the same => already exists
 call AddUser "exists!" test/AddUser.json
 
+# list users
+call GetUserList "ok"
+
 # get user detail
-call GetUserDetail "ok"
+call GetUserDetail "ok" test/GetUserDetail.json
 
 # rename user, change GROUP_ID, acl,...
 call SetUserDetail "ok" test/SetUserDetail.json
 
 # get user detail
-call GetUserDetail "ok"
+call GetUserDetail "ok, new params" test/GetUserDetail.json
 
 # add host, get HOST_ID
 call AddHost "ok" test/AddHost.json
@@ -96,14 +103,17 @@ call AddHost "ok" test/AddHost.json
 # create the same => already exists
 call AddHost "exists!" test/AddHost.json
 
+# get host list
+call GetHostList "ok"
+
 # get host detail
-call GetHostDetail "ok"
+call GetHostDetail "ok" test/GetHostDetail.json
 
 # rename host, reset GROUP_ID
 call SetHostDetail "ok" test/SetHostDetail.json
 
 # get host detail
-call GetHostDetail "ok"
+call GetHostDetail "ok" test/GetHostDetail.json
 
 # add service, get SERVICE_ID
 call AddService "ok" test/AddService.json 
@@ -111,23 +121,26 @@ call AddService "ok" test/AddService.json
 # create the same => already exists
 call AddService "exists!" test/AddService.json 
 
+# list services
+call GetServiceList "ok"
+
 # get service detail
-call GetServiceDetail "ok"
+call GetServiceDetail "ok" test/GetServiceDetail.json
 
 # change service, set HOST_ID
 call SetServiceDetail "ok" test/SetServiceDetail.json
 
 # get service detail
-call GetServiceDetail "ok"
+call GetServiceDetail "ok" test/GetServiceDetail.json
 
 # run test on service as USER_ID (APIKEY)
 call TestService "ok" test/TestService.json
 
 # get service status
-call GetServiceStatus "ok"
+call GetServiceStatus "ok" test/GetServiceDetail.json
 
 # get service status detail
-call GetServiceStatusDetail "ok"
+#call GetServiceStatusDetail "ok"
 
 # change activated on service
 call SetServiceDetail "ok" test/SetServiceDetailDisable.json

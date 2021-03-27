@@ -247,7 +247,7 @@ class Api
     }
 
     /**
-     * reads  for API usage
+     * reads monitor_usage table for API usage
      * 
      * @return void
      */
@@ -272,6 +272,138 @@ class Api
             $this->apiUsage = self::API_USAGE_LIMIT;
             $this->writeJSON(429);
         }
+    }
+
+    /** property function -- addition
+     * 
+     * @return void
+     */
+    private function addProperty(string $property)
+    {       
+        $data = $this->payload;
+
+        // property shoud be already defined in function call, therefore there is no need to mention it in message
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+
+        // prefixes and suffixes for database transactions
+        $property_index = $property . "_name";
+        $property_table = "monitor_" . $property . "s";
+
+        # XSS prevention/anti-sql-injection experiment
+        if (!$data || empty($data) || !$data[$property_index]) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+
+            $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
+            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+                    
+            if ($num_rows > 0) {
+                $this->statusMessage = "This $property already exists!";
+                $this->writeJSON(code: 406);
+            }
+
+            $sql->query("INSERT into $property_table ($property_index) VALUES ('" . $data[$property_index] . "')");
+        }
+        catch (Exception $e) {
+            $this->statusMessage = $e->getMessage();
+            $this->writeJSON(503);
+        }   
+
+        $this->engineOutput = $data;
+        $this->writeJSON();
+    }
+
+    /** property function -- modification
+     * 
+     * @return void
+     */
+    private function setProperty(string $property, array $data)
+    {       
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+    }
+
+    /** property function -- fetching
+     * 
+     * @return void
+     */
+    private function getPropertyList(string $property)
+    {       
+        /*if (!$property) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }*/
+
+        $property_index = $property . "_name";
+        $property_id = $property . "_id";
+        $property_table = "monitor_" . $property . "s";
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+            $res = $sql->query("SELECT * FROM $property_table");
+        }
+        catch (Exception $e) {
+            $this->statusMessage = $e->getMessage();
+            $this->writeJSON(503);
+        }   
+
+        // fetch rows
+        $rows = [];
+        while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
+            $rows[] = [
+                (int) $row[$property_id] => $row[$property_index]
+            ];
+        }
+
+        $this->engineOutput = $rows;
+        $this->writeJSON();
+    }
+
+    /** property function -- erasing
+     * 
+     * @return void
+     */
+    private function deleteProperty(string $property)
+    {       
+        $data = $this->payload;
+
+        if (!$property || !$data) {
+            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+
+        $property_index = $property . "_id";
+        $property_table = "monitor_" . $property . "s";
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+
+            $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
+            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+
+            if ($num_rows == 0) {
+                $this->statusMessage = "This $property does not exist!";
+                $this->writeJSON(code: 406);
+            }
+
+            $res = $sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
+        }
+        catch (Exception $e) {
+            $this->statusMessage = $e->getMessage();
+            $this->writeJSON(503);
+        }
+
+        $this->engineOutput = $data;
+        $this->writeJSON();
     }
 
     /**
@@ -420,34 +552,7 @@ class Api
              * )
              */
             case 'AddGroup':
-                $data = $this->payload;
-
-                # XSS prevention?? sql-injection??
-                if (!$data || empty($data) || !$data["group_name"]) {
-                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-                    $this->writeJSON(code: 406);
-                }
-
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-
-                    $control_query = "SELECT COUNT(*) as count from monitor_groups WHERE group_name = '" . $data["group_name"] . "'";
-                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
-                    
-                    if ($num_rows > 0) {
-                        $this->statusMessage = "This group already exists!";
-                        $this->writeJSON(code: 403);
-                    }
-
-                    $sql->query("INSERT into monitor_groups (group_name) VALUES ('" . $data["group_name"] . "')");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-
-                $this->engineOutput = $data;
-                $this->writeJSON();
+                $this->addProperty(property: "group");
                 break;
 
             /**
@@ -457,23 +562,7 @@ class Api
              * )
              */
             case "GetGroupList":
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-                    $res = $sql->query("SELECT group_name FROM monitor_groups");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-
-                // fetch rows
-                $rows = [];
-                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-                    $rows[] = $row["group_name"];
-                }
-
-                $this->engineOutput = $rows;
-                $this->writeJSON();
+                $this->getPropertyList(property: "group");
                 break;
 
             /**
@@ -493,7 +582,7 @@ class Api
              * )
              */
             case 'DeleteGroup':
-                $this->writeJSON();
+                $this->deleteProperty(property: "group");
                 break;
 
             /**
@@ -503,194 +592,45 @@ class Api
              * )
              */
             case 'AddHost':
-                $data = $this->payload;
-
-                # XSS prevention?? sql-injection??
-                if (!$data || empty($data) || !$data["host_name"]) {
-                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-                    $this->writeJSON(code: 406);
-                }
-
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-
-                    $control_query = "SELECT COUNT(*) as count from monitor_hosts WHERE host_name = '" . $data["host_name"] . "'";
-                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
-                    
-                    if ($num_rows > 0) {
-                        $this->statusMessage = "This host already exists!";
-                        $this->writeJSON(code: 403);
-                    }
-
-                    $sql->query("INSERT into monitor_hosts (host_name) VALUES ('" . $data["host_name"] . "')");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-
-                $this->engineOutput = $data;
-                $this->writeJSON();
+                $this->addProperty(property: "host");
                 break;
             
-            case "GetHostList":
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-                    $res = $sql->query("SELECT host_name FROM monitor_hosts");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-        
-                // fetch rows
-                $rows = [];
-                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-                    $rows[] = $row["host_name"];
-                }
-        
-                $this->engineOutput = $rows;
-                $this->writeJSON();
+            case 'GetHostList':
+                $this->getPropertyList(property: "host");
+                break;
+
+            case 'DeleteHost':
+                $this->deleteProperty(property: "host");
                 break;
 
             case 'AddUser':
-                $data = $this->payload;
-    
-                # XSS prevention?? sql-injection??
-                if (!$data || empty($data) || !$data["user_name"]) {
-                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-                    $this->writeJSON(code: 406);
-                }
-    
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-    
-                    $control_query = "SELECT COUNT(*) as count from monitor_users WHERE user_name = '" . $data["user_name"] . "'";
-                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
-                        
-                    if ($num_rows > 0) {
-                        $this->statusMessage = "This user already exists!";
-                        $this->writeJSON(code: 403);
-                    }
-    
-                    $sql->query("INSERT into monitor_users (user_name) VALUES ('" . $data["user_name"] . "')");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-    
-                $this->engineOutput = $data;
-                $this->writeJSON();
+                $this->addProperty(property: "user");
                 break;
 
-            case "GetUserList":
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-                    $res = $sql->query("SELECT user_name FROM monitor_users");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-    
-                // fetch rows
-                $rows = [];
-                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-                    $rows[] = $row["user_name"];
-                }
-    
-                $this->engineOutput = $rows;
-                $this->writeJSON();
+            case 'GetUserList':
+                $this->getPropertyList(property: "user");
+                break;
+
+            case 'DeleteUser':
+                $this->deleteProperty(property: "user");
                 break;
 
             case 'AddService':
-                $data = $this->payload;
-
-                # XSS prevention?? sql-injection??
-                if (!$data || empty($data) || !$data["service_name"]) {
-                    $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-                    $this->writeJSON(code: 406);
-                }
-
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-
-                    $control_query = "SELECT COUNT(*) as count from monitor_services WHERE service_name = '" . $data["service_name"] . "'";
-                    $num_rows = $sql->query($control_query)->fetchArray()["count"];
-                    
-                    if ($num_rows > 0) {
-                        $this->statusMessage = "This service already exists!";
-                        $this->writeJSON(code: 403);
-                    }
-
-                    $sql->query("INSERT into monitor_services (service_name) VALUES ('" . $data["service_name"] . "')");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-
-                $this->engineOutput = $data;
-                $this->writeJSON();
+                $this->addProperty(property: "service");
                 break;
 
-            case "GetServiceList":
-                try {
-                    $sql = new SQLite(DATABASE_FILE);
-                    $res = $sql->query("SELECT service_name FROM monitor_services");
-                }
-                catch (Exception $e) {
-                    $this->statusMessage = $e->getMessage();
-                    $this->writeJSON(503);
-                }   
-    
-                // fetch rows
-                $rows = [];
-                while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-                    $rows[] = $row["service_name"];
-                }
-    
-                $this->engineOutput = $rows;
-                $this->writeJSON();
+            case 'GetServiceList':
+                $this->getPropertyList(property: "service");
+                break;
+
+            case 'DeleteService':
+                $this->deleteProperty(property: "service");
                 break;
                 
             default:
                 $this->statusMessage = "Unknown function. Please, see API documentation.";
                 $this->writeJSON(code: 404);
                 break;
-        }
-    }
-
-    private function addProperty(string $property, array $data = [])
-    {       
-        if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
-        }
-    }
-
-    private function setProperty(string $property, array $data = [])
-    {       
-        if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
-        }
-    }
-
-    private function getProperty(string $property, array $data = [])
-    {       
-        if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
-        }
-    }
-
-    private function deleteProperty(string $property, array $data = [])
-    {       
-        if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
         }
     }
 

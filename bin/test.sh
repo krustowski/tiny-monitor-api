@@ -154,11 +154,17 @@ call DeleteService "ok" test/DeleteService.json
 # remove service => not exists
 call DeleteService "not exists!" test/DeleteService.json
 
+# get service list
+call GetServiceList "ok"
+
 # remove host
 call DeleteHost "ok" test/DeleteHost.json
 
 # remove host => not exists
 call DeleteHost "not exists!" test/DeleteHost.json
+
+# get host list
+call GetHostList "ok"
 
 # remove user
 call DeleteUser "ok" test/DeleteUser.json
@@ -166,8 +172,14 @@ call DeleteUser "ok" test/DeleteUser.json
 # remove user => not exists
 call DeleteUser "not exists!" test/DeleteUser.json
 
+# get user list
+call GetUserList "ok"
+
 # remove group
 call DeleteGroup "ok" test/DeleteGroup.json
 
 # remove group => not exists
 call DeleteGroup "not exists!" test/DeleteGroup.json
+
+# get group list
+call GetGroupList "ok"

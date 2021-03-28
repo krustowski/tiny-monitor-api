@@ -13,14 +13,14 @@
 
 // curl + curlopts + public apikey
 
-$publicKey = "";
-$endpoint = "localhost/api/v2/GetPublicStatus?apikey=$publicKey";
+$public_key = "";
+$endpoint = "localhost/api/v2/GetPublicStatus?apikey=$public_key";
 
-$userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
+$user_agent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
 $handles = [];
-$engineOutput = [];
+$engine_output = [];
 
-$curlOpts = [
+$curl_opts = [
     CURLOPT_CERTINFO => false,               // true = check cert expiry later
     CURLOPT_DNS_SHUFFLE_ADDRESSES => true,   // true = use randomized addresses from DNS
     CURLOPT_FOLLOWLOCATION => true,          // true = follow Location: header!
@@ -40,6 +40,7 @@ $curlOpts = [
 ];
 
 $curl_handle = curl_init($endpoint);
+curl_setopt_array($curl_handle, $curl_opts);
 curl_exec($curl_handle);
 curl_close($curl_handle);
 
@@ -71,7 +72,7 @@ curl_close($curl_handle);
           <div class="col-md-12 column">
               <div class="panel panel-warning">
                 <div class="panel-heading">
-                  <h3 class="panel-title">s
+                  <h3 class="panel-title">
                     Not All Systems Operational
                     <small class="pull-right">Refreshed 39 minutes ago</small>
                   </h3>

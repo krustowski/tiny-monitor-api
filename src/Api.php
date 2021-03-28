@@ -30,26 +30,26 @@ use \SQLite3 as SQLite;
 class Api
 {
     // API header vars
-    private $apiName = "tiny-monitor REST API";
-    private $apiVersion = "2.0";
-    private $apiUsage = 0;
-    private $apiTimestampStart;
-    private $remoteAddress;
-    private $statusMessage;
-    public  $userAgent;
+    private $api_name = "tiny-monitor REST API";
+    private $api_version = "2.0";
+    private $api_usage = 0;
+    private $api_timestamp_start;
+    private $remote_address;
+    private $status_message;
+    public  $user_agent;
 
     // API config vars
-    private $logFile = "/dev/stdout";
+    private $log_file = "/dev/stdout";
 
     // API data vars
-    private $engineOutput = [];
-    private $routePath;
-    private $apiKey;
-    private $safeGET = [];
+    private $engine_output = [];
+    private $route_path;
+    private $api_key;
+    private $safe_GET = [];
     //private $safePOST = [];
     private $payload = [];
 
-    private $supervisorApiKey;
+    private $supervisor_apikey;
 
     // constants
     const JSON_ASSOCIATIVE = true;
@@ -73,7 +73,7 @@ class Api
         504 => "Gateway Timeout",
     ];
 
-    private $testSites = [
+    private $test_sites = [
         "https://digikatalog.cz",
         "https://julia.mxd.cz",
         "https://khanovaskola.cz",
@@ -128,15 +128,15 @@ class Api
     public function __construct() 
     {
         // init
-        $this->apiTimestampStart = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
-        $this->remoteAddress = $_SERVER["REMOTE_ADDR"] ?? null;
-        $this->userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
+        $this->api_timestamp_start = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
+        $this->remote_address = $_SERVER["REMOTE_ADDR"] ?? null;
+        $this->user_agent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
 	    
         $this->checkDatabase();
         $this->checkApiUsage();
 
         // cleanse HTTP requests
-        $this->safeGET  = array_map("htmlspecialchars", $_GET);
+        $this->safe_GET  = array_map("htmlspecialchars", $_GET);
         //$this->safePOST = array_map("htmlspecialchars", $_POST);
 
         $this->checkApiKey();
@@ -146,12 +146,12 @@ class Api
             $json = file_get_contents('php://input');
             $this->payload = json_decode($json, self::JSON_ASSOCIATIVE);
         } catch (Exception $e) {
-            $this->statusMessage = $e;
+            $this->status_message = $e;
             $this->writeJSON(code: 406);
         }
 
         // explode over full path query variable
-        $this->routePath = explode('/', $this->safeGET["fullPath"]) ?? null;
+        $this->route_path = explode('/', $this->safe_GET["fullPath"]) ?? null;
 
         // parse and exec an Api call
         $this->handleRequest();
@@ -163,17 +163,17 @@ class Api
     private function checkApiKey()
     {
         // get API key
-        $this->apiKey = $this->safeGET["apikey"] ?? null;
+        $this->apikey = $this->safe_GET["apikey"] ?? null;
 
-        if (!$this->apiKey) {
-            $this->statusMessage = "API key reuqired!";
+        if (!$this->apikey) {
+            $this->status_message = "API key reuqired!";
             $this->writeJSON(code: 403);
         }
 
         $sql = new SQLite(DATABASE_FILE);
 
-        if ($sql->querySingle("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apiKey . "' AND user_activated='1'") == 0) {
-            $this->statusMessage = "This API key is not authorized.";
+        if ($sql->querySingle("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apikey . "' AND user_activated='1'") == 0) {
+            $this->status_message = "This API key is not authorized.";
             $this->writeJSON(code: 401);
         }
     }
@@ -241,7 +241,7 @@ class Api
             }
         }
         catch (Exception $e) {
-            $this->statusMessage = $e->getMessage();
+            $this->status_message = $e->getMessage();
             $this->writeJSON(503);
         }        
     }
@@ -257,7 +257,7 @@ class Api
 
         // insert new usage
         $sql->querySingle("INSERT INTO monitor_usage(ip_address, time_stamp) VALUES (
-            '" . $this->remoteAddress . "', 
+            '" . $this->remote_address . "', 
             '" . time() . "'
             )");
 
@@ -266,11 +266,11 @@ class Api
 
         // access from ip_address within 1 hour
         //$this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "'");
-        $this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM monitor_usage WHERE ip_address='" . $this->remoteAddress . "' AND time_stamp BETWEEN " . time() - self::API_USAGE_TIME_LIMIT . " AND " . time());       
+        $this->api_usage = $sql->querySingle("SELECT COUNT(*) as count FROM monitor_usage WHERE ip_address='" . $this->remote_address . "' AND time_stamp BETWEEN " . time() - self::API_USAGE_TIME_LIMIT . " AND " . time());       
 
-        if ($this->apiUsage > self::API_USAGE_LIMIT) {
-            $this->apiUsage = self::API_USAGE_LIMIT;
-            $this->writeJSON(429);
+        if ($this->api_usage > self::API_USAGE_LIMIT) {
+            $this->api_usage = self::API_USAGE_LIMIT;
+            $this->writeJSON(code: 429);
         }
     }
 
@@ -284,7 +284,7 @@ class Api
 
         // property shoud be already defined in function call, therefore there is no need to mention it in message
         if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
             $this->writeJSON(code: 406);
         }
 
@@ -294,7 +294,7 @@ class Api
 
         # XSS prevention/anti-sql-injection experiment
         if (!$data || empty($data) || !$data[$property_index]) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
             $this->writeJSON(code: 406);
         }
 
@@ -305,18 +305,18 @@ class Api
             $num_rows = $sql->query($control_query)->fetchArray()["count"];
                     
             if ($num_rows > 0) {
-                $this->statusMessage = "This $property already exists!";
+                $this->status_message = "This $property already exists!";
                 $this->writeJSON(code: 406);
             }
 
             $sql->query("INSERT into $property_table ($property_index) VALUES ('" . $data[$property_index] . "')");
         }
         catch (Exception $e) {
-            $this->statusMessage = $e->getMessage();
+            $this->status_message = $e->getMessage();
             $this->writeJSON(503);
         }   
 
-        $this->engineOutput = $data;
+        $this->engine_output = $data;
         $this->writeJSON();
     }
 
@@ -327,7 +327,7 @@ class Api
     private function setProperty(string $property, array $data)
     {       
         if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
             $this->writeJSON(code: 406);
         }
     }
@@ -343,8 +343,8 @@ class Api
             $this->writeJSON(code: 406);
         }*/
 
-        $property_index = $property . "_name";
         $property_id = $property . "_id";
+        $property_index = $property . "_name";
         $property_table = "monitor_" . $property . "s";
 
         try {
@@ -352,7 +352,7 @@ class Api
             $res = $sql->query("SELECT * FROM $property_table");
         }
         catch (Exception $e) {
-            $this->statusMessage = $e->getMessage();
+            $this->status_message = $e->getMessage();
             $this->writeJSON(503);
         }   
 
@@ -364,9 +364,17 @@ class Api
             ];
         }
 
-        $this->engineOutput = $rows;
+        $this->engine_output = $rows;
         $this->writeJSON();
     }
+
+    /**
+     * property function -- detail fetching
+     * 
+     * @return void
+     */
+    private function getPropertyDetail(string $property, array $identity) 
+    {}
 
     /** property function -- erasing
      * 
@@ -377,7 +385,7 @@ class Api
         $data = $this->payload;
 
         if (!$property || !$data) {
-            $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
             $this->writeJSON(code: 406);
         }
 
@@ -391,18 +399,18 @@ class Api
             $num_rows = $sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
-                $this->statusMessage = "This $property does not exist!";
+                $this->status_message = "This $property does not exist!";
                 $this->writeJSON(code: 406);
             }
 
             $res = $sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
         }
         catch (Exception $e) {
-            $this->statusMessage = $e->getMessage();
+            $this->status_message = $e->getMessage();
             $this->writeJSON(503);
         }
 
-        $this->engineOutput = $data;
+        $this->engine_output = $data;
         $this->writeJSON();
     }
 
@@ -413,7 +421,7 @@ class Api
      */
     private function handleRequest() 
     {
-        $function = $this->routePath[0];
+        $function = $this->route_path[0];
 
         switch ($function) {
             /**
@@ -427,7 +435,7 @@ class Api
              */
             case 'GetStatusAllTest':
                 //$engine = new Engine();
-                $this->engineOutput = Engine::checkSite($this->testSites); //$engine->checkSite($this->testSites);
+                $this->engine_output = Engine::checkSite($this->test_sites); //$engine->checkSite($this->testSites);
                 $this->writeJSON();
                 break;
 
@@ -441,15 +449,15 @@ class Api
                 $sql = new SQLite(DATABASE_FILE);
 
                 // list tables
-                $tablesquery = $sql->query("SELECT name FROM sqlite_master WHERE type='table';");
-                while ($table = $tablesquery->fetchArray(SQLITE3_ASSOC)) {
-                    if ($table['name'] != "sqlite_sequence") {
-                        $tables[] = $table['name'];
+                $tables_query = $sql->query("SELECT name FROM sqlite_master WHERE type='table'");
+                while ($table = $tables_query->fetchArray(SQLITE3_ASSOC)) {
+                    if ($table["name"] != "sqlite_sequence") {
+                        $tables[] = $table["name"];
                     }
                 }
 
-                $this->engineOutput = [
-                    "remote_address" => $this->remoteAddress,
+                $this->engine_output = [
+                    "remote_address" => $this->remote_address,
                     "php_version" => phpversion() ?? null,
                     "curl_version" => \curl_version()["version"] ?? null,
                     "sqlite_version" => $sql->version()["versionString"] ?? null,
@@ -467,16 +475,16 @@ class Api
              * )
              */
             case 'GetStatus':
-                $sites = $this->testSites;
+                $sites = $this->test_sites;
 
                 //$this->engineOutput = Engine\getStatus();
                 foreach ($sites as $site) {
-                    array_push($this->engineOutput, [
+                    $engine_output[] = [
                         "hash" => hash("sha256", $site),
                         "url" => $site,
                         "alive" => rand(0, 1),
                         "time" => time() + (-1)^(rand(0, 1)) * rand(100, 500)
-                    ]);
+                    ];
                 }
 
                 $this->writeJSON();
@@ -489,11 +497,11 @@ class Api
              * )
              */
             case 'GetPublicStatus':
-                $sites = $this->testSites;
+                $sites = $this->test_sites;
 
                 //$this->engineOutput = Engine\getStatus();
                 foreach ($sites as $site) {
-                    array_push($this->engineOutput, [
+                    array_push($this->engine_output, [
                         "hash" => hash("sha256", $site),
                         "url" => $site,
                         "alive" => rand(0, 1),
@@ -511,16 +519,16 @@ class Api
              * )
              */
             case 'GetStatusDetail':
-                if (empty($this->routePath[1])) {
-                    $this->statusMessage = "Hash list is required for this function!";
+                if (empty($this->route_path[1])) {
+                    $this->status_message = "Hash list is required for this function!";
                     $this->writeJSON(code: 400);
                 }
 
-                $list = explode(",", $this->routePath[1]);
+                $list = explode(",", $this->route_path[1]);
 
                 // LASAGNA only!
                 foreach($list as $item) {
-                    $this->engineOutput[] = [
+                    $this->engine_output[] = [
                         "hash" => $item,
                         "time" => '$last_metering',
                         "downtime" => '$downtime',
@@ -628,7 +636,7 @@ class Api
                 break;
                 
             default:
-                $this->statusMessage = "Unknown function. Please, see API documentation.";
+                $this->status_message = "Unknown function. Please, see API documentation at doc/.";
                 $this->writeJSON(code: 404);
                 break;
         }
@@ -642,30 +650,30 @@ class Api
      */
     private function writeJSON(int $code = 200) 
     {
-        $function = empty($this->routePath[0]) ? null : $this->routePath[0];
+        $function = empty($this->route_path[0]) ? null : $this->route_path[0];
 
-        $apiHeader = [
+        $api_header = [
             "timestamp" => time() ?? null,
-            "name" => $this->apiName,
-            "version" => $this->apiVersion,
-            "processing_time_in_ms" => round((microtime(true) - $this->apiTimestampStart) * 1000, 2),
+            "name" => $this->api_name,
+            "version" => $this->api_version,
+            "processing_time_in_ms" => round((microtime(true) - $this->api_timestamp_start) * 1000, 2),
             "api_quota_hourly" => self::API_USAGE_LIMIT,
-            "api_usage_hourly" => $this->apiUsage,
+            "api_usage_hourly" => $this->api_usage,
             "function" => $function,
-            "message" => $this->statusMessage ?? self::HTTP_CODE[$code],
+            "message" => $this->status_message ?? self::HTTP_CODE[$code],
             "status_code" => $code
         ];
 
-        $dataOutput = [
-            "api" => $apiHeader,
-            "data" => $this->engineOutput
+        $data_output = [
+            "api" => $api_header,
+            "data" => $this->engine_output
         ];
 
-        header("User-Agent: " . $this->userAgent);
-	    header("HTTP/1.1 ${code} " . self::HTTP_CODE[$code]);
+        header("User-Agent: " . $this->user_agent);
+	    header("HTTP/2 ${code} " . self::HTTP_CODE[$code]);
         header("Content-type: application/json");
         
-        echo json_encode($dataOutput, JSON_PRETTY_PRINT);
+        echo json_encode($data_output, JSON_PRETTY_PRINT);
         exit;
     }
 }

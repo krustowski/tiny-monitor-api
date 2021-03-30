@@ -36,7 +36,8 @@ class Api
     private $api_timestamp_start;
     private $remote_address;
     private $status_message;
-    public  $user_agent;
+    private $user_agent;
+    private $http_version = "";
 
     // API config vars
     private $log_file = "/dev/stdout";
@@ -44,12 +45,12 @@ class Api
     // API data vars
     private $engine_output = [];
     private $route_path;
-    private $api_key;
+    private $apikey;
     private $safe_GET = [];
     //private $safePOST = [];
     private $payload = [];
 
-    private $supervisor_apikey;
+    //private $supervisor_apikey;
 
     // constants
     const JSON_ASSOCIATIVE = true;
@@ -144,7 +145,7 @@ class Api
         // POST data, payload
         try {
             $json = file_get_contents('php://input');
-            $this->payload = json_decode($json, self::JSON_ASSOCIATIVE);
+            $this->payload = json_decode($json, self::JSON_ASSOCIATIVE) ?? null;
         } catch (Exception $e) {
             $this->status_message = $e;
             $this->writeJSON(code: 406);
@@ -636,6 +637,9 @@ class Api
                 break;
                 
             default:
+                // TODO
+                // try cases across loaded modules
+                
                 $this->status_message = "Unknown function. Please, see API documentation at doc/.";
                 $this->writeJSON(code: 404);
                 break;
@@ -670,7 +674,7 @@ class Api
         ];
 
         header("User-Agent: " . $this->user_agent);
-	    header("HTTP/2 ${code} " . self::HTTP_CODE[$code]);
+        header("$this->http_version $code " . self::HTTP_CODE[$code]);
         header("Content-type: application/json");
         
         echo json_encode($data_output, JSON_PRETTY_PRINT);

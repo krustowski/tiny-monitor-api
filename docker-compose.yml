@@ -15,6 +15,7 @@ services:
       - tiny-monitor-net
     #environment:
       #SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
+      #DOCKER_USED_IMAGE: ${DOCKER_USED_IMAGE}
 
 networks:
   tiny-monitor-net:

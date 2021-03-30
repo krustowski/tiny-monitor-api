@@ -64,7 +64,15 @@ config:
 	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
 	@bash `pwd`/bin/config.sh
 
-deploy: composer key build run call
+deploy: docker_pull git_pull composer key build run call
+
+docker_pull:
+	@echo -e "\n${YELLOW} Pulling actual '${DOCKER_USED_IMAGE}' image from Docker Hub ...${RESET}\n"
+	@docker pull ${DOCKER_USED_IMAGE}
+
+git_pull:
+	@echo -e "\n${YELLOW} Pulling from git repository ...${RESET}\n"
+	@git pull
 
 composer:
 	@echo -e "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"

@@ -43,7 +43,7 @@ export
 # TARGETS
 #
 
-.PHONY: all test clean src public bin vendor doc #Makefile Dockerfile docker*
+.PHONY: all test clean src public bin vendor doc mods #Makefile Dockerfile docker*
 
 all: info
 
@@ -75,7 +75,7 @@ git_pull:
 	@git pull
 
 composer:
-	@echo -e "\n${YELLOW} Seting the 'vendor' dir using composer ...${RESET}\n"
+	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer ...${RESET}\n"
 	@composer install
 
 key:

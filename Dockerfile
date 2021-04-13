@@ -13,22 +13,20 @@ RUN apk update && \
     apk upgrade && \
     apk add --no-cache bash runit nginx php8 php8-fpm php8-curl php8-json php8-sqlite3 sqlite tzdata
 
-# clone the repo
+# copy repo
 COPY . ${APP_ROOT}
 RUN cd /var/www && rm -rf html localhost && \
-    #touch ${DATABASE_FILE} && \
     chmod a+w ${APP_ROOT} && \
     chown -R nginx:nginx ${APP_ROOT}
 
 # reconfigure services
 RUN rm -f /etc/nginx/http.d/* && \
-    ln -s ${APP_ROOT}/docker/tiny-monitor-api-nginx.conf /etc/nginx/http.d/ 
-RUN mkdir /run/nginx && \
+    ln -s ${APP_ROOT}/docker/tiny-monitor-api-nginx.conf /etc/nginx/http.d/ && \
+    mkdir /run/nginx && \
     chown nginx:nginx /run/nginx && \
     nginx -t && \
     php-fpm8 -t
 
-# final cmd batch
 WORKDIR ${APP_ROOT}
 #USER nginx
 EXPOSE 80

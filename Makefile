@@ -7,11 +7,11 @@
 -include .env
 
 ENV?=deploy
-DOCKER_EXEC_COMMAND?=/bin/bash
+DOCKER_EXEC_COMMAND?=${SHELL}
 FUNCTION?=GetSystemStatus
 JSON_FILE?=''
 RUN_FROM_MAKEFILE?=true
-APIKEY_FILE=.supervisor_apikey
+APIKEY_FILE?=${APIKEY_FILE}
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -48,69 +48,78 @@ export
 all: info
 
 info:
-	@echo -e "\n${GREEN} tiny-monitor-api Makefile ${RESET}\n"
+	@echo -e "\n${GREEN} ${APP_NAME} ${RESET}\n"
 
 	@echo -e "${YELLOW} make config${RESET} \t check the local environment (to develop/deploy)"
 	@echo -e "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
 	@echo -e "${YELLOW} make test${RESET}   \t run unit tests on __existing__ container\n"
-	
+
 	@echo -e "${YELLOW} make doc${RESET}    \t generate API documentation"
 #	@echo -e "${YELLOW} make scan${RESET}   \t scan built image for vulnerabilities (using snyk)"
 	@echo -e "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
 	@echo -e "${YELLOW} make call${RESET}   \t make an API call"
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
-config:
-	@echo "\n${YELLOW} Checking and configuring the local environment ...${RESET}\n"
-	@bash `pwd`/bin/config.sh
-
 deploy: docker_pull git_pull composer key build run call
 
+config:
+	@echo -e "\n${YELLOW} Checking and configuring local environment${RESET}\n"
+	@bash `pwd`/bin/config.sh
+	@exit 0
+
 docker_pull:
-	@echo -e "\n${YELLOW} Pulling actual '${DOCKER_USED_IMAGE}' image from Docker Hub ...${RESET}\n"
+	@echo -e "\n${YELLOW} Pulling actual '${DOCKER_USED_IMAGE}' image from Docker Hub${RESET}\n"
 	@docker pull ${DOCKER_USED_IMAGE}
+	@exit 0
 
 git_pull:
-	@echo -e "\n${YELLOW} Pulling from git repository ...${RESET}\n"
+	@echo -e "\n${YELLOW} Pulling from repository${RESET}\n"
 	@git pull
+	@exit 0
 
 composer:
-	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer ...${RESET}\n"
+	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer${RESET}\n"
 	@composer install
+	@exit 0
 
 key:
-	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
+	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY${RESET}\n"
 	@bash `pwd`/bin/key.sh
+	@exit 0
 
 build:
-	@echo -e "\n${YELLOW} Building the image ...${RESET}\n"
+	@echo -e "\n${YELLOW} Building image${RESET}\n"
 	@docker-compose build \
 		&& exit 0 \
 		|| echo "\n${RED} docker is not running!${RESET}\n"; exit 1
 
 run:
-	@echo -e "\n${YELLOW} Starting the container ...${RESET}\n"
+	@echo -e "\n${YELLOW} Starting container${RESET}\n"
 	@docker-compose up --detach
+	@exit 0
 
-test: 
-	@echo -e "\n${YELLOW} Running unit tests ...${RESET}\n"
-	@bash `pwd`/bin/test.sh 
+test:
+	@echo -e "\n${YELLOW} Running unit tests${RESET}\n"
+	@bash `pwd`/bin/test.sh
+	@exit 0
 
-doc: 
-	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
+doc:
+	@echo -e "\n${YELLOW} Generating new documentation revision${RESET}\n"
 	@exit 1
 
 call:
-	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"
-	@bash `pwd`/bin/call.sh 
+	@echo -e "\n${YELLOW} Making the API call${RESET}\n"
+	@bash `pwd`/bin/call.sh
+	@exit 0
 
 exec:
-	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
+	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container${RESET}\n"
 	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
+	@exit 0
 
 log:
-	@echo -e "\n${YELLOW} Docker logs ...${RESET}\n"
+	@echo -e "\n${YELLOW} Docker logs${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
-
-	@echo -e "\n${YELLOW} Nginx error.log ...${RESET}\n"
+	@echo -e "\n${YELLOW} Nginx error.log${RESET}\n"
 	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
+	@exit 0

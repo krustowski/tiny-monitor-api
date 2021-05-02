@@ -48,7 +48,7 @@ export
 all: info
 
 info:
-	@echo -e "\n${GREEN} ${APP_NAME} ${RESET}\n"
+	@echo -e "\n${GREEN} ${APP_NAME} / Makefile ${RESET}\n"
 
 	@echo -e "${YELLOW} make config${RESET} \t check the local environment (to develop/deploy)"
 	@echo -e "${YELLOW} make deploy${RESET} \t (re)build, run and test the container"
@@ -63,63 +63,55 @@ info:
 deploy: docker_pull git_pull composer key build run call
 
 config:
-	@echo -e "\n${YELLOW} Checking and configuring local environment${RESET}\n"
+	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"
 	@bash `pwd`/bin/config.sh
-	@exit 0
 
 docker_pull:
-	@echo -e "\n${YELLOW} Pulling actual '${DOCKER_USED_IMAGE}' image from Docker Hub${RESET}\n"
+	@echo -e "\n${YELLOW} Pulling actual '${DOCKER_USED_IMAGE}' image from Docker Hub ...${RESET}\n"
 	@docker pull ${DOCKER_USED_IMAGE}
-	@exit 0
 
 git_pull:
-	@echo -e "\n${YELLOW} Pulling from repository${RESET}\n"
+	@echo -e "\n${YELLOW} Pulling from repository ...${RESET}\n"
 	@git pull
-	@exit 0
 
 composer:
-	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer${RESET}\n"
+	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer ...${RESET}\n"
 	@composer install
-	@exit 0
 
 key:
-	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY${RESET}\n"
+	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
 	@bash `pwd`/bin/key.sh
-	@exit 0
 
 build:
-	@echo -e "\n${YELLOW} Building image${RESET}\n"
+	@echo -e "\n${YELLOW} Building docker image ...${RESET}\n"
 	@docker-compose build \
 		&& exit 0 \
 		|| echo "\n${RED} docker is not running!${RESET}\n"; exit 1
 
 run:
-	@echo -e "\n${YELLOW} Starting container${RESET}\n"
+	@echo -e "\n${YELLOW} Starting container ...${RESET}\n"
 	@docker-compose up --detach
-	@exit 0
 
 test:
-	@echo -e "\n${YELLOW} Running unit tests${RESET}\n"
+	@echo -e "\n${YELLOW} Running unit tests ...${RESET}\n"
 	@bash `pwd`/bin/test.sh
-	@exit 0
 
 doc:
-	@echo -e "\n${YELLOW} Generating new documentation revision${RESET}\n"
+	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
+	# TBD
 	@exit 1
 
 call:
-	@echo -e "\n${YELLOW} Making the API call${RESET}\n"
+	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"
 	@bash `pwd`/bin/call.sh
-	@exit 0
 
 exec:
-	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container${RESET}\n"
+	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
 	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
-	@exit 0
 
 log:
 	@echo -e "\n${YELLOW} Docker logs${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
 	@echo -e "\n${YELLOW} Nginx error.log${RESET}\n"
 	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
-	@exit 0
+

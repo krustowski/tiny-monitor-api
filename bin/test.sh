@@ -32,7 +32,7 @@ function call() {
         && PAYLOAD="$(cat $3)" \
         || PAYLOAD='{}'
 
-    ENDPOINT="http://localhost:${TM_API_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
+    ENDPOINT="http://localhost:${APP_EXPOSE_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
     COUNTER=$((COUNTER+1))
 
     echo -e "\n [${COUNTER}] ${BLUE}Calling ${FUNCTION} (expecting: ${EXPECTED})...${RESET}\n"
@@ -155,7 +155,7 @@ call DeleteService "ok" test/DeleteService.json
 call DeleteService "not exists!" test/DeleteService.json
 
 # get service list
-call GetServiceList "ok"
+call GetServiceList "ok + empty list"
 
 # remove host
 call DeleteHost "ok" test/DeleteHost.json
@@ -164,7 +164,7 @@ call DeleteHost "ok" test/DeleteHost.json
 call DeleteHost "not exists!" test/DeleteHost.json
 
 # get host list
-call GetHostList "ok"
+call GetHostList "ok + empty list"
 
 # remove user
 call DeleteUser "ok" test/DeleteUser.json
@@ -173,7 +173,7 @@ call DeleteUser "ok" test/DeleteUser.json
 call DeleteUser "not exists!" test/DeleteUser.json
 
 # get user list
-call GetUserList "ok"
+call GetUserList "ok + empty list"
 
 # remove group
 call DeleteGroup "ok" test/DeleteGroup.json
@@ -182,4 +182,4 @@ call DeleteGroup "ok" test/DeleteGroup.json
 call DeleteGroup "not exists!" test/DeleteGroup.json
 
 # get group list
-call GetGroupList "ok"
+call GetGroupList "ok + empty list"

@@ -2,21 +2,21 @@ version: '3.6'
 
 services:
   tiny-monitor-api:
-    image: tiny-monitor-api
+    image: ${IMAGE_NAME}
     container_name: ${CONTAINER_NAME}
     build: .
     restart: unless-stopped
     ports:
       - target: 80
-        published: ${TM_API_PORT}
+        published: ${APP_EXPOSE_PORT}
         mode: host
         protocol: tcp
     networks: 
-      - tiny-monitor-net
+      - ${NETWORK_NAME}
     #environment:
       #SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
       #DOCKER_USED_IMAGE: ${DOCKER_USED_IMAGE}
 
 networks:
   tiny-monitor-net:
-    name: tiny-monitor-net
+    name: ${NETWORK_NAME}

@@ -57,7 +57,9 @@ info:
 	@echo -e "${YELLOW} make doc${RESET}    \t generate API documentation"
 #	@echo -e "${YELLOW} make scan${RESET}   \t scan built image for vulnerabilities (using snyk)"
 	@echo -e "${YELLOW} make exec${RESET}   \t execute command in container (def. ${DOCKER_EXEC_COMMAND})"
-	@echo -e "${YELLOW} make call${RESET}   \t make an API call"
+	@echo -e "${YELLOW} make call${RESET}   \t make an API call\n"
+
+	@echo -e "${YELLOW} make stop${RESET}   \t destroy the cluster/container stack"
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
 deploy: docker_pull git_pull composer key build run call
@@ -115,4 +117,8 @@ log:
 	@docker logs ${CONTAINER_NAME}
 	@echo -e "\n${YELLOW} Nginx error.log${RESET}\n"
 	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
+
+stop:
+	@echo -e "\n${YELLOW} Destroying the whole cluster ...${RESET}\n"
+	@docker-compose down
 

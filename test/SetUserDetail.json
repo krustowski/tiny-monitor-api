@@ -4,6 +4,6 @@
     "user_apikey": "",
     "user_ip_address": "1.1.1.1",
     "user_last_access": "",
-    "user_activated": true,
+    "user_activated": 1,
     "group_id": 1
 }

@@ -14,7 +14,7 @@
 // curl + curlopts + public apikey
 
 $public_key = "";
-$endpoint = "localhost/api/v2/GetPublicStatus?apikey=$public_key";
+$endpoint = "http://localhost/api/v2/GetPublicStatus?apikey=$public_key";
 
 $user_agent = "tiny-monitor status page / cURL " . curl_version()["version"] ?? null;
 $engine_output = [];
@@ -84,6 +84,7 @@ $refreshed_formated = "29 minutes";
 
   <script src="//code.jquery.com/jquery.min.js"></script>
   <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+  <title>Public Status Page / tiny-monitor</title>
 </head>
 <body>
   

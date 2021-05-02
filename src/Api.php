@@ -8,7 +8,7 @@
  *
  * @OA\Info(
  *      title="tiny-monitor REST API", 
- *      version="2.0",
+ *      version="1.9",
  *      @OA\Contact(
  *          name="krustowski",
  *          email="tiny-monitor@n0p.cz"
@@ -31,7 +31,7 @@ class Api
 {
     // API header vars
     private $api_name = "tiny-monitor REST API";
-    private $api_version = "2.0";
+    private $api_version = "1.9";
     private $api_usage = 0;
     private $api_timestamp_start;
     private $remote_address;
@@ -293,7 +293,7 @@ class Api
         $property_index = $property . "_name";
         $property_table = "monitor_" . $property . "s";
 
-        # XSS prevention/anti-sql-injection experiment
+        # XSS prevention/anti-sql-injection __experiment__
         if (!$data || empty($data) || !$data[$property_index]) {
             $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
             $this->writeJSON(code: 406);
@@ -319,18 +319,6 @@ class Api
 
         $this->engine_output = $data;
         $this->writeJSON();
-    }
-
-    /** property function -- modification
-     * 
-     * @return void
-     */
-    private function setProperty(string $property, array $data)
-    {       
-        if (!$property || !$data) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
-        }
     }
 
     /** property function -- fetching
@@ -359,10 +347,11 @@ class Api
 
         // fetch rows
         $rows = [];
-        while ($row = $res->fetchArray(SQLITE3_ASSOC)) {
-            $rows[] = [
-                (int) $row[$property_id] => $row[$property_index]
-            ];
+        while ($row = $res->fetchArray(SQLITE3_BOTH)) {
+            // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
+            $rows[] = (object)[$row[$property_id] => $row[$property_index]];
+            // or try this
+            // $rows[] = [$row[$property_id], $row[$property_index]];
         }
 
         $this->engine_output = $rows;
@@ -374,8 +363,93 @@ class Api
      * 
      * @return void
      */
-    private function getPropertyDetail(string $property, array $identity) 
-    {}
+    private function getPropertyDetail(string $property) 
+    {
+        $data = $this->payload;
+
+        if (!$property || !$data) {
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+
+        $property_id = $property . "_id";
+        $property_index = $property . "_id";
+        $property_table = "monitor_" . $property . "s";
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+
+            $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
+            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+
+            if ($num_rows == 0) {
+                $this->status_message = "This $property does not exist!";
+                $this->writeJSON(code: 406);
+            }
+
+            // for over StructModel::propertyModel
+            $rows = $sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
+
+            $this->engine_output = $rows;
+
+            //$res = $sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
+        }
+        catch (Exception $e) {
+            $this->status_message = $e->getMessage();
+            $this->writeJSON(503);
+        }
+
+        $this->writeJSON();
+    }
+
+    /** property function -- modification
+     * 
+     * @return void
+     */
+    private function setPropertyDetail(string $property)
+    {       
+        $data = $this->payload;
+
+        if (!$property || !$data) {
+            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
+            $this->writeJSON(code: 406);
+        }
+
+        $property_id = $property . "_id";
+        $property_index = $property . "_id";
+        $property_table = "monitor_" . $property . "s";
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+
+            $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
+            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+
+            if ($num_rows == 0) {
+                $this->status_message = "This $property does not exist!";
+                $this->writeJSON(code: 406);
+            }
+
+            foreach ($data as $column => $val) {
+                if ($column == $property_id)
+                    continue;
+
+                @$sql->query("UPDATE $property_table set $column = '$val' where $property_index = '" . $data[$property_index] . "'");
+            }
+
+        }
+        catch (Exception $e) {
+            $this->status_message = $e->getMessage();
+            $this->writeJSON(503);
+        }
+
+        // for over StructModel::propertyModel
+        $rows = $sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
+
+        $this->engine_output = $rows;
+
+        $this->writeJSON();
+    }
 
     /** property function -- erasing
      * 
@@ -576,12 +650,22 @@ class Api
 
             /**
              * @OA\Get(
+             *     path="/api/v2/GetGroupDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'GetGroupDetail':
+                $this->getPropertyDetail(property: "group");
+                break;
+
+            /**
+             * @OA\Get(
              *     path="/api/v2/SetGroupDetail",
              *     @OA\Response(response="200", description="")
              * )
              */
             case 'SetGroupDetail':
-                $this->writeJSON();
+                $this->setPropertyDetail(property: "group");
                 break;
 
             /**
@@ -608,6 +692,26 @@ class Api
                 $this->getPropertyList(property: "host");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetHostDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'GetHostDetail':
+                $this->getPropertyDetail(property: "host");
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/SetHostDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'SetHostDetail':
+                $this->setPropertyDetail(property: "host");
+                break;
+
             case 'DeleteHost':
                 $this->deleteProperty(property: "host");
                 break;
@@ -618,6 +722,26 @@ class Api
 
             case 'GetUserList':
                 $this->getPropertyList(property: "user");
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetUserDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'GetUserDetail':
+                $this->getPropertyDetail(property: "user");
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/SetUserDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'SetUserDetail':
+                $this->setPropertyDetail(property: "user");
                 break;
 
             case 'DeleteUser':
@@ -632,6 +756,26 @@ class Api
                 $this->getPropertyList(property: "service");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetServiceDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'GetServiceDetail':
+                $this->getPropertyDetail(property: "service");
+                break;
+
+            /**
+             * @OA\Get(
+             *     path="/api/v2/SetServiceDetail",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
+            case 'SetServiceDetail':
+                $this->setPropertyDetail(property: "service");
+                break;
+
             case 'DeleteService':
                 $this->deleteProperty(property: "service");
                 break;
@@ -639,6 +783,7 @@ class Api
             default:
                 // TODO
                 // try cases across loaded modules
+                // $this->scanModules();
                 
                 $this->status_message = "Unknown function. Please, see API documentation at doc/.";
                 $this->writeJSON(code: 404);
@@ -677,6 +822,9 @@ class Api
         header("$this->http_version $code " . self::HTTP_CODE[$code]);
         header("Content-type: application/json");
         
+        // JSON_FORCE_OBJECT: supervisor user_id is 0, therefore we need to explicitly print "0" as array key
+        // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
+        // https://www.php.net/manual/en/function.json-encode.php
         echo json_encode($data_output, JSON_PRETTY_PRINT);
         exit;
     }

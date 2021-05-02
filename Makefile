@@ -103,6 +103,7 @@ doc:
 
 call:
 	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"
+	@sleep 3
 	@bash `pwd`/bin/call.sh
 
 exec:

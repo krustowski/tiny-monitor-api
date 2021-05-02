@@ -43,3 +43,44 @@ Generate API documentation to PDF
 ```
 make doc
 ```
+
+# notes from 27/02/21
+
+## Getters
+
+```
+GetStatus
+GetDetail
+GetGroups
+GetUsers
+GetHosts
+```
+
+## Setters
+
+```
+AddUser
+AddUserGroup
+AddHost
+AddService
+AddHostGroup
+
+SetUser
+SetUserGroup
+SetHost
+SetService
+SetHostGroup
+```
+
+## System calls
+
+```
+StopAll
+StartAll
+```
+
+## Features
+
+– downtime per service (optional)
+– telegram_chat_id per group
+– user permissions (super, power, basic)

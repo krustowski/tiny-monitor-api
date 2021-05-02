@@ -4,9 +4,13 @@
 
 FROM alpine:latest
 
-ENV APP_ROOT "/var/www/tiny-monitor-api"
-ENV TZ "Europe/Prague"
-ENV DATABASE_FILE "${APP_ROOT}/tiny_monitor_core.db"
+ARG APP_ROOT
+ARG TZ
+ARG DATABASE_FILE
+
+ENV APP_ROOT ${APP_ROOT}
+ENV TZ ${TZ}
+ENV DATABASE_FILE ${DATABASE_FILE}
 
 # install essentials
 RUN apk update && \

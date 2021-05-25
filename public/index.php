@@ -3,7 +3,7 @@
 /**
  * tiny-monitor-api
  * 
- * @author krustowski <k@n0p.cz>
+ * @author krustowski <tmv2@n0p.cz>
  * @license MIT
  */
 

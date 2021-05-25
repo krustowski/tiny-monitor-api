@@ -3,7 +3,7 @@
 /**
  * tiny-monitor-api
  * 
- * @author krustowski <k@n0p.cz>
+ * @author krustowski <tmv2@n0p.cz>
  * @license MIT
  *
  * @OA\Info(
@@ -11,7 +11,7 @@
  *      version="1.9",
  *      @OA\Contact(
  *          name="krustowski",
- *          email="tiny-monitor@n0p.cz"
+ *          email="tmv2@n0p.cz"
  *      )
  * )
  * @OA\Server(url="http://localhost/api/v2/")
@@ -74,58 +74,6 @@ class Api
         504 => "Gateway Timeout",
     ];
 
-    private $test_sites = [
-        "https://digikatalog.cz",
-        "https://julia.mxd.cz",
-        "https://khanovaskola.cz",
-        "https://moodle-uploader-988765764d26.gscloud.cz",
-        "https://php.gscloud.cz",
-        "https://pma.gscloud.cz",
-        "https://pma35.mxd.cz",
-        "https://ssl.gscloud.cz:2083",
-        "https://sys.gscloud.cz",
-        "https://andini.cz",
-        "https://bbqpoint.cz",
-        "https://book.gscloud.cz",
-        "https://csking.gscloud.cz",
-        "https://foodinc.cz",
-        "https://foodincubator.cz",
-        "https://funclubbrno.cz",
-        "https://game.gscloud.cz",
-        "https://gscloud.cz",
-        "https://hirobistro.cz",
-        "https://hmc.gscloud.cz",
-        "https://indexmatrik.cz",
-        "https://jo.gscloud.cz",
-        "https://lasagna.gscloud.cz",
-        "https://mnamky.gscloud.cz",
-        "https://mini.gscloud.cz",
-        "https://podcast.gscloud.cz",
-        "https://podcastsk.gscloud.cz",
-        "https://moodle.andini.cz",
-        "https://moodle310.mxd.cz",
-        "https://moodle35.mxd.cz",
-        "https://moodle37.mxd.cz",
-        "https://moodle39.mxd.cz",
-        "https://academiacafe.cz",
-        "https://amadis.cz",
-        "https://andini-research.com",
-        "https://comunityenergy.com",
-        "https://handshop.cz",
-        "https://kepert.cz",
-        "https://kestrasnicke.cz",
-        "https://kouzelnehratky.cz",
-        "https://mxd.cz",
-        "https://parappuduwa.info",
-        "https://sirhal.cz",
-        "https://televariete2019.cz",
-        "https://zitaterapie.cz",
-        "https://monitor.gscloud.cz",
-        "https://newz.mxd.cz/",
-        "https://red.mxd.cz/",
-        "https://wordpress-in-docker.mxd.cz/"
-    ];
-
     public function __construct() 
     {
         // init
@@ -164,7 +112,7 @@ class Api
     private function checkApiKey()
     {
         // get API key
-        $this->apikey = $this->safe_GET["apikey"] ?? null;
+        $this->apikey = $this->safe_GET["apikey"] ?? \getallheaders()["X-Api-Key"] ?? null;
 
         if (!$this->apikey) {
             $this->status_message = "API key reuqired!";
@@ -510,7 +458,7 @@ class Api
              */
             case 'GetStatusAllTest':
                 //$engine = new Engine();
-                $this->engine_output = Engine::checkSite($this->test_sites); //$engine->checkSite($this->testSites);
+                $this->engine_output = Engine::checkSite(["https://mon.n0p.cz"]); //$engine->checkSite($this->testSites);
                 $this->writeJSON();
                 break;
 
@@ -550,7 +498,7 @@ class Api
              * )
              */
             case 'GetStatus':
-                $sites = $this->test_sites;
+                $sites = ["https://mon.n0p.cz/"];
 
                 //$this->engineOutput = Engine\getStatus();
                 foreach ($sites as $site) {
@@ -752,6 +700,12 @@ class Api
                 $this->addProperty(property: "service");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/api/v2/GetServiceList",
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'GetServiceList':
                 $this->getPropertyList(property: "service");
                 break;

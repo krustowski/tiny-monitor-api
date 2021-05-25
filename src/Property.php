@@ -3,7 +3,7 @@
 /**
  * tiny-monitor-api
  * 
- * @author krustowski <k@n0p.cz>
+ * @author krustowski <tmv2@n0p.cz>
  * @license MIT
  *
  * @OA\Info(
@@ -11,7 +11,7 @@
  *      version="1.9",
  *      @OA\Contact(
  *          name="krustowski",
- *          email="tiny-monitor@n0p.cz"
+ *          email="tmv2@n0p.cz"
  *      )
  * )
  * @OA\Server(url="http://localhost/api/v2/")

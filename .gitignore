@@ -7,5 +7,6 @@
 .Trash-1000
 Thumbs.db
 vendor/
+doc/
 composer.phar
 .supervisor_apikey

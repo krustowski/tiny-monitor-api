@@ -13,59 +13,57 @@
 
 // curl + curlopts + public apikey
 
-$public_key = "52ec36471a0c747eea554181a5e2620c2eec1fb685f34b157bfe30529d58740a61d030f0b5e15101de2722baa27f04407e2415c948c7359faa95d7e8bca72a3a";
+$public_apikey = '52ec36471a0c747eea554181a5e2620c2eec1fb685f34b157bfe30529d58740a61d030f0b5e15101de2722baa27f04407e2415c948c7359faa95d7e8bca72a3a';
 $endpoint = "http://localhost/api/v2/GetPublicStatus";
 
-$user_agent = "tiny-monitor status page / cURL " . curl_version()["version"] ?? null;
-$engine_output = [];
+$user_agent = "tiny-monitor status page / cURL " . \curl_version()["version"] ?? null;
 
 $curl_opts = [
-    CURLOPT_CERTINFO => false,               // true = check cert expiry later
-    CURLOPT_DNS_SHUFFLE_ADDRESSES => true,   // true = use randomized addresses from DNS
-    CURLOPT_FOLLOWLOCATION => true,          // true = follow Location: header!
-    CURLOPT_FORBID_REUSE => true,            // true = do not use this con again
+    //CURLOPT_CERTINFO => false,               // true = check cert expiry later
+    //CURLOPT_DNS_SHUFFLE_ADDRESSES => true,   // true = use randomized addresses from DNS
+    //CURLOPT_FOLLOWLOCATION => true,          // true = follow Location: header!
+    //CURLOPT_FORBID_REUSE => true,            // true = do not use this con again
     CURLOPT_FRESH_CONNECT => true,           // true = no cached cons
-    CURLOPT_HEADER => true,                  // true = send header in output
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_SSL_VERIFYPEER => false,
-    CURLOPT_CONNECTTIMEOUT => 30,            // seconds
-    CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
-    CURLOPT_MAXREDIRS => 20,
+    //CURLOPT_HEADER => false,                 // true = send header in output
+    //CURLOPT_RETURNTRANSFER => true,
+    //CURLOPT_SSL_VERIFYPEER => false,
+    //CURLOPT_CONNECTTIMEOUT => 30,            // seconds
+    //CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
+    //CURLOPT_MAXREDIRS => 20,
     //CURLOPT_PORT => 80,
-    CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
-    CURLOPT_TIMEOUT => 20,
-    CURLOPT_USERAGENT => $user_agent,
+    //CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
+    //CURLOPT_TIMEOUT => 20,
+    //CURLOPT_USERAGENT => $user_agent,
     CURLOPT_HTTPHEADER => [
-      "Content-type: application/json",
-      "X-Api-Key: $public_key"
+      'X-Api-Key: ' . $public_apikey
     ]
 ];
 
 // get services' raw list
-$curl_handle = curl_init($endpoint);
-curl_setopt_array($curl_handle, $curl_opts);
-$services = curl_exec($curl_handle)["data"] ?? null;
-curl_close($curl_handle);
+$curl_handle = \curl_init(url: $endpoint);
+\curl_setopt_array(handle: $curl_handle, options: $curl_opts);
+$services = \json_decode(\curl_exec(handle: $curl_handle), true)["data"] ?? null;
+\curl_close(handle: $curl_handle);
 
 // demo data
 $demo_services = [
   [
     "service_name" => "frank_ssh",
     "service_desc" => "SSH access to frank",
-    "service_link" => "telnet://frank:22",
+    "service_endpoint" => "telnet://frank:22",
     "service_status" => true
   ],
   [
     "service_name" => "monitor_frontend",
     "service_desc" => "TM frontend site status",
-    "service_link" => "https://monitor:443",
+    "service_endpoint" => "https://monitor:443",
     "service_status" => true
   ],
   [
     "service_name" => "frank_ssh",
-    "service_desc" => "SSH access to frank",
-    "service_link" => "telnet://frank:22",
-    "service_status" => true
+    "service_desc" => "SSH access to hel1",
+    "service_endpoint" => "telnet://hel1:22",
+    "service_status" => false
   ]
 ];
 
@@ -80,7 +78,6 @@ foreach ($services as $s) { if (!$s["service_status"]) $not_operational_count++;
 
 // formated timestamp of last test
 $refreshed_formated = date("H:i:s d-m-Y", time()); // "29 minutes";
-
 ?>
 
 <!doctype html>
@@ -102,7 +99,7 @@ $refreshed_formated = date("H:i:s d-m-Y", time()); // "29 minutes";
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1>Public Status Page / tiny-monitor</h1>
+        <h1>Public Status Page</h1>
       </div>
     </div>
     
@@ -128,7 +125,7 @@ $refreshed_formated = date("H:i:s d-m-Y", time()); // "29 minutes";
                 <div class="list-group-item">
                   <h4 class="list-group-item-heading">
                     <?php echo $s["service_name"]; ?>
-                    <a href="<?php echo $s["service_link"]; ?>"  data-toggle="tooltip" data-placement="bottom" title="<?php echo $s["service_desc"]; ?>">
+                    <a href="<?php echo $s["service_endpoint"]; ?>"  data-toggle="tooltip" data-placement="bottom" title="<?php echo $s["service_desc"]; ?>">
                       <i class="fa fa-question-circle"></i>
                     </a>
                   </h4>

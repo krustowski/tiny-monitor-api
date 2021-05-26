@@ -15,10 +15,10 @@ services:
         PHP_VERSION: ${PHP_VERSION}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/v2/"]
-      interval: 1m
-      timeout: 10s
-      retries: 3
+      test: ["CMD", "curl", "-f", "http://localhost/api/v2/", "-H", "X-Api-Key: ${SUPERVISOR_APIKEY}"]
+      interval: 5m
+      timeout: 60s
+      retries: 2
       start_period: 15s
     ports:
       - target: 80

@@ -105,11 +105,11 @@ class Engine
         foreach ($handles as $hash => $handle) {
 	    $gotInfo = [];
 
-            if (curl_errno($handle)) {
-                $gotInfo[] = [
-			"hash" => $hash,
-			"status" => "failed"
-		]; // TODO
+        if (curl_errno($handle)) {
+            $gotInfo[] = [
+			    "hash" => $hash,
+			    "status" => "failed"
+		    ]; // TODO
 	    } else {
             $gotInfo = curl_getinfo($handle);
 		    $gotInfo["hash"] = $hash;

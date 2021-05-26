@@ -225,10 +225,11 @@ class Api
                     1,
                     0
                 )",
-                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated) VALUES (
+                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated, group_id) VALUES (
                     1, 
                     'public_agent', 
                     '" . PUBLIC_APIKEY . "',
+                    1,
                     1
                 )",
                 "CREATE TABLE IF NOT EXISTS monitor_hosts(
@@ -241,6 +242,7 @@ class Api
                     service_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     service_name VARCHAR,
                     service_type VARCHAR,
+                    service_desc TEXT,
                     service_endpoint VARCHAR,
                     service_port INTEGER,
                     service_downtime TIME,
@@ -388,7 +390,7 @@ class Api
 
         try {
             $sql = new SQLite(DATABASE_FILE);
-            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1'");
+            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1'");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -400,7 +402,12 @@ class Api
         while ($row = $res->fetchArray(SQLITE3_BOTH)) {
             // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
             $rows[] = (object)[
-                $row[$property_id] => $row[$property_index]
+                //$row[$property_id] => $row[$property_index]
+                "service_id" => $row[$property_id],
+                "service_name" => $row[$property_index],
+                "service_desc" => $row["service_desc"],
+                "service_endpoint" => $row["service_endpoint"],
+                "service_status" => $row["service_status"]
             ];
         }
 
@@ -636,19 +643,8 @@ class Api
              * )
              */
             case 'GetPublicStatus':
-                $sites = $this->test_sites;
-
+                $this->getPublicList(property: "service", return: false);
                 //$this->engineOutput = Engine\getStatus();
-                foreach ($sites as $site) {
-                    array_push($this->engine_output, [
-                        "hash" => hash("sha256", $site),
-                        "url" => $site,
-                        "alive" => rand(0, 1),
-                        "time" => time() + (-1)^(rand(0, 1)) * rand(100, 500)
-                    ]);
-                }
-
-                $this->writeJSON();
                 break;
 
             /**
@@ -1104,21 +1100,18 @@ class Api
 
             /**
              * @OA\Post(
-             *     path="/AddService",
-             *     tags={"service"},
-             *     @OA\RequestBody(
-             *          description="add new service",
+             *      path="/AddService",
+             *      summary="add new service",
+             *      tags={"service"},
+             *      @OA\RequestBody(
              *          required=true,
              *          @OA\MediaType(
              *              mediaType="application/json",
              *              @OA\Schema(
-             *                  @OA\Property(
-             *                      property="service_name",
-             *                      type="string"
-             *                  ),
              *                  example={
              *                      "service_name": "SSH",
              *                      "service_type": "port",
+             *                      "service_desc": "SSH port",
              *                      "service_endpoint": "telnet://localhost",
              *                      "service_port": 22,
              *                      "service_activated": 1,
@@ -1199,6 +1192,7 @@ class Api
              *                      "service_id": 1,
              *                      "service_name": "SSH",
              *                      "service_type": "port",
+             *                      "service_desc": "SSH service test on localhost machine",
              *                      "service_endpoint": "telnet://localhost",
              *                      "service_port": 22,
              *                      "service_downtime": "UTC+2/1.00AM",

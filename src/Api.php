@@ -747,6 +747,7 @@ class Api
                 case 'AddUser':
                 $this->addProperty(property: "user");
                 break;
+                
             /**
              * @OA\Get(
              *     path="/GetUserList",

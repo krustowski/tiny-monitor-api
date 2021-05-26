@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # entrypoint.sh
-# krustowski <k@n0p.cz>
+# krustowski <tmv2@n0p.cz>
 
 APIKEY_FILE="${APP_ROOT}/.supervisor_apikey"
 

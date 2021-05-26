@@ -12,7 +12,14 @@ services:
         APP_ROOT: ${APP_ROOT}
         DATABASE_FILE: ${DATABASE_FILE}
         TZ: ${TZ}
+        PHP_VERSION: ${PHP_VERSION}
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/api/v2/"]
+      interval: 1m
+      timeout: 10s
+      retries: 3
+      start_period: 15s
     ports:
       - target: 80
         published: ${APP_EXPOSE_PORT}

@@ -1,5 +1,28 @@
 # Tiny Monitor API
 
+## API documentation
+
+### Production example
+
+https://mon.n0p.cz/doc/
+
+For auth the supervisor API key is required (for now). Better deploy it locally to be able to fully test it through.
+
+### Locally run example
+
+```
+# have docker engine installed
+
+# deploy app
+make deploy 
+
+# run unit tests
+make test
+
+# check .env file for SWAGGER_EXPOSE_PORT and open it locally in browser
+http://localhost:${SWAGGER_EXPOSE_PORT}/
+```
+
 ## Makefile
 
 Show the structure of Makefile targets
@@ -79,7 +102,7 @@ StopAll
 StartAll
 ```
 
-## Features
+## Features TODO
 
 – downtime per service (optional)
 – telegram_chat_id per group

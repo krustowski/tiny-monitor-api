@@ -7,15 +7,28 @@ FROM alpine:latest
 ARG APP_ROOT
 ARG TZ
 ARG DATABASE_FILE
+ARG PHP_VERSION
 
 ENV APP_ROOT ${APP_ROOT}
 ENV TZ ${TZ}
 ENV DATABASE_FILE ${DATABASE_FILE}
+ENV PHP_VERSION ${PHP_VERSION}
 
 # install essentials
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache bash runit nginx php8 php8-fpm php8-curl php8-json php8-sqlite3 sqlite tzdata
+    apk add --no-cache \
+    	bash \
+	runit \
+	nginx \
+    curl \
+	${PHP_VERSION} \
+	${PHP_VERSION}-fpm \
+	${PHP_VERSION}-curl \
+	${PHP_VERSION}-json \
+	${PHP_VERSION}-sqlite3 \
+	sqlite \
+	tzdata
 
 # copy repo
 COPY . ${APP_ROOT}
@@ -31,7 +44,9 @@ RUN rm -f /etc/nginx/http.d/* && \
     nginx -t && \
     php-fpm8 -t
 
-RUN ln -s /dev/stdout /var/log/nginx/error.log
+RUN rm -f /var/log/nginx/* && \
+    ln -s /dev/stdout /var/log/nginx/error.log && \
+    ln -s /dev/stdout /var/log/nginx/access.log
 
 WORKDIR ${APP_ROOT}
 #USER nginx

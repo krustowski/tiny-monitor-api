@@ -12,6 +12,7 @@ FUNCTION?=GetSystemStatus
 JSON_FILE?=''
 RUN_FROM_MAKEFILE?=true
 APIKEY_FILE?=${APIKEY_FILE}
+SWAGGER_JSON_FILE?=doc/swagger.json
 
 # define standard colors
 # https://gist.github.com/rsperl/d2dfe88a520968fbc1f49db0a29345b9
@@ -101,7 +102,8 @@ test:
 doc:
 	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
 	@mkdir -p doc && \
-		./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output doc/swagger.json
+		./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output ${SWAGGER_JSON_FILE} && \
+		echo -e " ${GREEN}JSON file from OpenAPI annotation created.${RESET}\n"
 
 call:
 	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"
@@ -115,8 +117,8 @@ exec:
 log:
 	@echo -e "\n${YELLOW} Docker logs${RESET}\n"
 	@docker logs ${CONTAINER_NAME}
-	@echo -e "\n${YELLOW} Nginx error.log${RESET}\n"
-	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
+#	@echo -e "\n${YELLOW} Nginx error.log${RESET}\n"
+#	@docker exec -i ${CONTAINER_NAME} cat /var/log/nginx/error.log
 
 stop:
 	@echo -e "\n${YELLOW} Destroying the whole cluster ...${RESET}\n"

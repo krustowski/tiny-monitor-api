@@ -5,7 +5,7 @@
     "service_endpoint": "mon.n0p.cz",
     "service_port": 80,
     "service_downtime": "",
-    "service_active": 1,
+    "service_activated": 1,
     "service_status": 0,
     "service_public": 1,
     "service_last_test": "",

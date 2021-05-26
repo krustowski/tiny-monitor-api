@@ -19,13 +19,14 @@
  *          url="https://opensource.org/licenses/MIT"
  *      )
  * ),
- * @OA\Server(
- *      url="https://mon.n0p.cz/api/v2/",
- *      description="Public REST API Server" 
- * ),
+ * // the port HAS TO be dynamic!
  * @OA\Server(
  *      url="http://localhost:8051/api/v2/",
- *      description="Docker-linked REST API server" 
+ *      description="Docker-compose-linked private REST API server" 
+ * ),
+ * @OA\Server(
+ *      url="https://mon.n0p.cz/api/v2/",
+ *      description="Public self-hosted REST API Server" 
  * ),
  * @OA\SecurityScheme(
  *      type="apiKey",
@@ -82,7 +83,6 @@ class Api
     private $remote_address;
     private $status_message;
     private $user_agent;
-    private $http_version = "";
 
     // API config vars
     private $log_file = "/dev/stdout";
@@ -109,6 +109,7 @@ class Api
         401 => "Unauthorized",
         403 => "Forbidden",
         404 => "Not Found",
+        405 => "Method Not Allowed",
         406 => "Not Acceptable",
         410 => "Gone",
         420 => "Enhance Your Calm",
@@ -913,7 +914,14 @@ class Api
 
         header("User-Agent: " . $this->user_agent);
         header("$this->http_version $code " . self::HTTP_CODE[$code]);
+        //header($_SERVER["SERVER_PROTOCOL"] . " $code " . self::HTTP_CODE[$code] . ": " . $this->status_message);
         header("Content-type: application/json");
+
+        // CORS for swagger_ui container
+        // https://swagger.io/docs/open-source-tools/swagger-ui/usage/cors/
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE"); 
+        header("Access-Control-Allow-Headers: Content-Type, X-Api-Key, Authorization");
         
         // JSON_FORCE_OBJECT: supervisor user_id is 0, therefore we need to explicitly print "0" as array key
         // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key

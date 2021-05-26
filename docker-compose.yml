@@ -41,7 +41,7 @@ services:
         protocol: tcp
     environment: 
       BASE_URL: "/"
-      SWAGGER_JSON: "/mnt/swagger.json"
+      SWAGGER_JSON: "/mnt/${SWAGGER_JSON_FILE}"
     networks: 
       - ${NETWORK_NAME}
     volumes: 

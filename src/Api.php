@@ -19,6 +19,20 @@
  *          url="https://opensource.org/licenses/MIT"
  *      )
  * ),
+ * @OA\Server(
+ *      url="https://mon.n0p.cz/api/v2/",
+ *      description="Public REST API Server" 
+ * ),
+ * @OA\Server(
+ *      url="http://localhost:8051/api/v2/",
+ *      description="Docker-linked REST API server" 
+ * ),
+ * @OA\SecurityScheme(
+ *      type="apiKey",
+ *      in="header",
+ *      securityScheme="api_key_auth",
+ *      name="X-Api-Key"
+ * ),
  * @OA\OpenApi(
  *      security={{"api_key_auth": {}}}
  * ),
@@ -45,16 +59,6 @@
  * @OA\Tag(
  *      name="system",
  *      description="tiny-monitor system operations"
- * ),
- * @OA\Server(
- *      url="https://mon.n0p.cz/api/v2/",
- *      description="Docker-linked REST API server" 
- * ),
- * @OA\SecurityScheme(
- *      type="apiKey",
- *      in="header",
- *      securityScheme="api_key_auth",
- *      name="X-Api-Key"
  * )
  * */
 
@@ -217,7 +221,7 @@ class Api
                     service_endpoint VARCHAR,
                     service_port INTEGER,
                     service_downtime TIME,
-                    service_active BOOLEAN,
+                    service_activated BOOLEAN,
                     service_status BOOLEAN,
                     service_public BOOLEAN,
                     service_last_test TIMESTAMP
@@ -735,19 +739,39 @@ class Api
             case 'DeleteHost':
                 $this->deleteProperty(property: "host");
                 break;
+
             /**
-             * @OA\Get(
-             *     path="/AddUser",
-             *     tags={"user"},
-             *     @OA\Response(
-             *          response="200", 
-             *          description="Add new user")
+             * @OA\Post(
+             *      path="/AddUser",
+             *      tags={"user"},
+             *      @OA\RequestBody(
+             *          description="place parameters for user creation",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="user_id",
+             *                      type="integer"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="user_name",
+             *                      type="string"
+             *                  ),
+             *                  example={"user_name": "snake_cased_nickname"}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="New user added"
+             *     )
              * )
              */
                 case 'AddUser':
                 $this->addProperty(property: "user");
                 break;
-                
+
             /**
              * @OA\Get(
              *     path="/GetUserList",

@@ -102,7 +102,7 @@ test:
 doc:
 	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
 	@mkdir -p doc && \
-		./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output ${SWAGGER_JSON_FILE} && \
+		./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output doc/${SWAGGER_JSON_FILE} && \
 		echo -e " ${GREEN}JSON file from OpenAPI annotation created.${RESET}\n"
 
 call:

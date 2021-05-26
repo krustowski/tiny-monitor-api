@@ -4,6 +4,8 @@ services:
   tiny-monitor-api:
     image: ${IMAGE_NAME}
     container_name: ${CONTAINER_NAME}
+    depends_on: 
+      - swagger_ui
     build: 
       context: .
       args:
@@ -21,6 +23,22 @@ services:
     #environment:
       #SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
       #DOCKER_USED_IMAGE: ${DOCKER_USED_IMAGE}
+
+  swagger_ui:
+    image: swaggerapi/swagger-ui
+    container_name: swagger_ui
+    ports: 
+      - target: 8080
+        published: ${SWAGGER_EXPOSE_PORT}
+        mode: host
+        protocol: tcp
+    environment: 
+      BASE_URL: "/"
+      SWAGGER_JSON: "/mnt/swagger.json"
+    networks: 
+      - ${NETWORK_NAME}
+    volumes: 
+      - "./doc:/mnt" 
 
 networks:
   tiny-monitor-net:

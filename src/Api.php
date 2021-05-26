@@ -7,15 +7,56 @@
  * @license MIT
  *
  * @OA\Info(
- *      title="tiny-monitor REST API", 
+ *      description="Docker-linked REST API server",
+ *      title="tiny-monitor REST API",
  *      version="1.9",
  *      @OA\Contact(
  *          name="krustowski",
  *          email="tmv2@n0p.cz"
+ *      ),
+ *      @OA\License(
+ *          name="MIT",
+ *          url="https://opensource.org/licenses/MIT"
  *      )
+ * ),
+ * @OA\OpenApi(
+ *      security={{"api_key_auth": {}}}
+ * ),
+ * @OA\Tag(
+ *      name="group",
+ *      description="tiny-monitor group operations"
+ * ),
+ * @OA\Tag(
+ *      name="user",
+ *      description="tiny-monitor user operations"
+ * ),
+ * @OA\Tag(
+ *      name="host",
+ *      description="tiny-monitor host operations"
+ * ),
+ * @OA\Tag(
+ *      name="service",
+ *      description="tiny-monitor service operations"
+ * ),
+ * @OA\Tag(
+ *      name="check",
+ *      description="tiny-monitor operations about service checkings"
+ * ),
+ * @OA\Tag(
+ *      name="system",
+ *      description="tiny-monitor system operations"
+ * ),
+ * @OA\Server(
+ *      url="https://mon.n0p.cz/api/v2/",
+ *      description="Docker-linked REST API server" 
+ * ),
+ * @OA\SecurityScheme(
+ *      type="apiKey",
+ *      in="header",
+ *      securityScheme="api_key_auth",
+ *      name="X-Api-Key"
  * )
- * @OA\Server(url="http://localhost/api/v2/")
- */
+ * */
 
 namespace tinyMonitor;
 
@@ -449,12 +490,17 @@ class Api
         switch ($function) {
             /**
              * @OA\Get(
-             *     path="/api/v2/GetStatusAllTest",
+             *     path="/GetStatusAllTest",
+             *     tags={"system"},
              *     summary="run the example curl execution",
              *     @OA\Response(
              *          response="200", 
-             *          description="list of all services defined + their curl output")
-             * )
+             *          description="Run test over all code-defined sites (test function)")
+             *     ),
+             *     @OA\Response(
+             *          response="default", 
+             *          description="Server internal error, engine error, parse error")
+             *     )
              */
             case 'GetStatusAllTest':
                 //$engine = new Engine();
@@ -464,7 +510,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetSystemStatus",
+             *     path="/GetSystemStatus",
+             *     tags={"system"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -493,7 +540,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetStatus",
+             *     path="/GetStatus",
+             *     tags={"system"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -515,7 +563,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetPublicStatus",
+             *     path="/GetPublicStatus",
+             *     tags={"system"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -537,7 +586,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetDetail",
+             *     path="/GetDetail",
+             *     tags={"system"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -577,8 +627,9 @@ class Api
                 break;
 
             /**
-             * @OA\Post(
-             *     path="/api/v2/AddGroup",
+             * @OA\Get(
+             *     path="/AddGroup",
+             *     tags={"group"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -588,7 +639,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetGroupList",
+             *     path="/GetGroupList",
+             *     tags={"group"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -598,7 +650,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetGroupDetail",
+             *     path="/GetGroupDetail",
+             *     tags={"group"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -608,7 +661,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/SetGroupDetail",
+             *     path="/SetGroupDetail",
+             *     tags={"group"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -618,7 +672,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/DeleteGroup",
+             *     path="/DeleteGroup",
+             *     tags={"group"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -628,7 +683,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/AddHost",
+             *     path="/AddHost",
+             *     tags={"host"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -636,13 +692,21 @@ class Api
                 $this->addProperty(property: "host");
                 break;
             
+            /**
+             * @OA\Get(
+             *     path="/GetHostList",
+             *     tags={"host"},
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'GetHostList':
                 $this->getPropertyList(property: "host");
                 break;
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetHostDetail",
+             *     path="/GetHostDetail",
+             *     tags={"host"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -652,7 +716,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/SetHostDetail",
+             *     path="/SetHostDetail",
+             *     tags={"host"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -660,21 +725,45 @@ class Api
                 $this->setPropertyDetail(property: "host");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/DeleteHost",
+             *     tags={"host"},
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'DeleteHost':
                 $this->deleteProperty(property: "host");
                 break;
-
-            case 'AddUser':
+            /**
+             * @OA\Get(
+             *     path="/AddUser",
+             *     tags={"user"},
+             *     @OA\Response(
+             *          response="200", 
+             *          description="Add new user")
+             * )
+             */
+                case 'AddUser':
                 $this->addProperty(property: "user");
                 break;
-
+            /**
+             * @OA\Get(
+             *     path="/GetUserList",
+             *     tags={"user"},
+             *     @OA\Response(
+             *          response="200", 
+             *          description="Get list of all users")
+             * )
+             */
             case 'GetUserList':
                 $this->getPropertyList(property: "user");
                 break;
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetUserDetail",
+             *     path="/GetUserDetail",
+             *     tags={"user"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -684,7 +773,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/SetUserDetail",
+             *     path="/SetUserDetail",
+             *     tags={"user"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -692,17 +782,32 @@ class Api
                 $this->setPropertyDetail(property: "user");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/DeleteUser",
+             *     tags={"user"},
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'DeleteUser':
                 $this->deleteProperty(property: "user");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/AddService",
+             *     tags={"service"},
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'AddService':
                 $this->addProperty(property: "service");
                 break;
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetServiceList",
+             *     path="/GetServiceList",
+             *     tags={"service"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -712,7 +817,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/GetServiceDetail",
+             *     path="/GetServiceDetail",
+             *     tags={"service"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -722,7 +828,8 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/api/v2/SetServiceDetail",
+             *     path="/SetServiceDetail",
+             *     tags={"service"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -730,6 +837,13 @@ class Api
                 $this->setPropertyDetail(property: "service");
                 break;
 
+            /**
+             * @OA\Get(
+             *     path="/DeleteService",
+             *     tags={"service"},
+             *     @OA\Response(response="200", description="")
+             * )
+             */
             case 'DeleteService':
                 $this->deleteProperty(property: "service");
                 break;

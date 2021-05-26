@@ -62,7 +62,7 @@ info:
 	@echo -e "${YELLOW} make stop${RESET}   \t destroy the cluster/container stack"
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
-deploy: docker_pull git_pull composer key build run call
+deploy: docker_pull git_pull composer key doc build run call
 
 config:
 	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"
@@ -100,14 +100,8 @@ test:
 
 doc:
 	@echo -e "\n${YELLOW} Generating new documentation revision ...${RESET}\n"
-	@./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output doc/swagger.json
-	docker run \
-		--rm \
-		-p ${SWAGGER_EXPOSE_PORT}:8080 \
-		-e BASE_URL=/ \
-		-e SWAGGER_JSON=/mnt/swagger.json \
-		-v `pwd`/doc:/mnt \
-		swaggerapi/swagger-ui
+	@mkdir -p doc && \
+		./vendor/zircote/swagger-php/bin/openapi --format json src/Api.php --output doc/swagger.json
 
 call:
 	@echo -e "\n${YELLOW} Making the API call ...${RESET}\n"

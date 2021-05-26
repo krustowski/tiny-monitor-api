@@ -19,7 +19,7 @@ export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE})
     || PAYLOAD='{}'
 
 # define API endpoint for cURL
-ENDPOINT="http://localhost:${APP_EXPOSE_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
+ENDPOINT="http://localhost:${APP_EXPOSE_PORT}/api/v2/${FUNCTION}"
 
 # execute
-curl -sL -d "${PAYLOAD}" ${ENDPOINT}
+curl -sL -d "${PAYLOAD}" -H "X-Api-Key: ${SUPERVISOR_APIKEY}" ${ENDPOINT}

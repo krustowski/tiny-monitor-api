@@ -32,7 +32,7 @@ function call() {
         && PAYLOAD="$(cat $3)" \
         || PAYLOAD='{}'
 
-    ENDPOINT="http://localhost:${APP_EXPOSE_PORT}/api/v2/${FUNCTION}?apikey=${SUPERVISOR_APIKEY}"
+    ENDPOINT="http://localhost:${APP_EXPOSE_PORT}/api/v2/${FUNCTION}"
     COUNTER=$((COUNTER+1))
 
     echo -e "\n [${COUNTER}] ${BLUE}Calling ${FUNCTION} (expecting: ${EXPECTED})...${RESET}\n"
@@ -43,7 +43,7 @@ function call() {
         exit 1
 
     # final call
-    curl -sL -d "${PAYLOAD}" ${ENDPOINT} | \
+    curl -sL -d "${PAYLOAD}" -H "X-Api-Key: ${SUPERVISOR_APIKEY}" ${ENDPOINT} | \
         jq '. | "message: " + .api.message, .data'
 
     unset FUNCTION PAYLOAD && \

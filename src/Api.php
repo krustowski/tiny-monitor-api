@@ -91,6 +91,9 @@ class Api
     private $engine_output = [];
     private $route_path;
     private $apikey;
+    private $api_identity;
+    private $api_groups;
+    private $api_acl;
     private $safe_GET = [];
     //private $safePOST = [];
     private $payload = [];
@@ -158,7 +161,7 @@ class Api
     private function checkApiKey()
     {
         // get API key
-        $this->apikey = $this->safe_GET["apikey"] ?? \getallheaders()["X-Api-Key"] ?? null;
+        $this->apikey = \getallheaders()["X-Api-Key"] ?? $this->safe_GET["apikey"] ?? null;
 
         if (!$this->apikey) {
             $this->status_message = "API key reuqired!";
@@ -171,6 +174,16 @@ class Api
             $this->status_message = "This API key is not authorized.";
             $this->writeJSON(code: 401);
         }
+
+        $rows = $sql->query("SELECT * FROM monitor_users  where user_apikey='" . $this->apikey . "'")->fetchArray(SQLITE3_ASSOC) ?? null;
+
+        if (!$rows) {
+            $this->status_message = "SQLite3 identity fetch error!";
+            $this->writeJSON(code: 500);
+        }
+
+        $this->api_identity = $rows["user_id"];
+        $this->api_groups = $rows["group_id"];
     }
 
     /**
@@ -192,21 +205,30 @@ class Api
                 )",
                 "CREATE TABLE IF NOT EXISTS monitor_groups(
                     group_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    group_name VARCHAR
+                    group_name VARCHAR,
+                    group_type VARCHAR
                 )",
                 "CREATE TABLE IF NOT EXISTS monitor_users(
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_name VARCHAR,
+                    user_acl VARCHAR,
                     user_apikey TEXT,
                     user_ip_address VARCHAR,
                     user_last_access TIMESTAMP,
                     user_activated BOOLEAN,
                     group_id INTEGER
                 )",
-                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated) VALUES (
+                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated, group_id) VALUES (
                     0, 
                     'supervisor', 
                     '" . SUPERVISOR_APIKEY . "',
+                    1,
+                    0
+                )",
+                "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated) VALUES (
+                    1, 
+                    'public_agent', 
+                    '" . PUBLIC_APIKEY . "',
                     1
                 )",
                 "CREATE TABLE IF NOT EXISTS monitor_hosts(
@@ -319,7 +341,7 @@ class Api
      * 
      * @return void
      */
-    private function getPropertyList(string $property)
+    private function getPropertyList(string $property, bool $return = false)
     {       
         /*if (!$property) {
             $this->statusMessage = "Wrong JSON payload structure! Not Acceptable!";
@@ -349,15 +371,51 @@ class Api
         }
 
         $this->engine_output = $rows;
-        $this->writeJSON();
+
+        if (!$return)
+            $this->writeJSON();
+    }
+
+    /** property function -- fetching
+     * 
+     * @return void
+     */
+    private function getPublicList(string $property = "service", bool $return = false)
+    {       
+        $property_id = $property . "_id";
+        $property_index = $property . "_name";
+        $property_table = "monitor_" . $property . "s";
+
+        try {
+            $sql = new SQLite(DATABASE_FILE);
+            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1'");
+        }
+        catch (Exception $e) {
+            $this->status_message = $e->getMessage();
+            $this->writeJSON(503);
+        }   
+
+        // fetch rows
+        $rows = [];
+        while ($row = $res->fetchArray(SQLITE3_BOTH)) {
+            // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
+            $rows[] = (object)[
+                $row[$property_id] => $row[$property_index]
+            ];
+        }
+
+        $this->engine_output = $rows;
+
+        if (!$return)
+            $this->writeJSON();
     }
 
     /**
      * property function -- detail fetching
      * 
-     * @return void
+     * @return void 
      */
-    private function getPropertyDetail(string $property) 
+    private function getPropertyDetail(string $property, bool $return = false) 
     {
         $data = $this->payload;
 
@@ -393,7 +451,8 @@ class Api
             $this->writeJSON(503);
         }
 
-        $this->writeJSON();
+        if (!$return)
+            $this->writeJSON();
     }
 
     /** property function -- modification
@@ -568,9 +627,12 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/GetPublicStatus",
-             *     tags={"status"},
-             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             *      path="/GetPublicStatus",
+             *      tags={"status"},
+             *      @OA\Response(
+             *          response="200", 
+             *          description="All public services listed"
+             *      )
              * )
              */
             case 'GetPublicStatus':
@@ -620,29 +682,6 @@ class Api
                 }
 
                 $list = explode(",", $this->route_path[1]);
-
-                // LASAGNA only!
-                foreach($list as $item) {
-                    $this->engine_output[] = [
-                        "hash" => $item,
-                        "time" => '$last_metering',
-                        "downtime" => '$downtime',
-                        "uptime" => '$uptime',
-                        "availability60" => '$availability60',
-                        "availability30" => '$availability30',
-                        "availability14" => '$availability14',
-                        "availability7" => '$availability7',
-                        "availability1" => '$availability1',
-                        "memavail" => '$memavail',
-                        "diskavail" => '$diskavail',
-                        "roundtrip" => '$roundtrip',
-                        "roundtrip60" => '$roundtrip60',
-                        "roundtrip30" => '$roundtrip30',
-                        "roundtrip14" => '$roundtrip14',
-                        "roundtrip7" => '$roundtrip7',
-                        "roundtrip1" => '$roundtrip1'
-                    ];
-                }
 
                 //$this->engineOutput = Engine\getDetail($list);
                 $this->writeJSON();
@@ -976,7 +1015,7 @@ class Api
              *                      property="user_id",
              *                      type="int64"
              *                  ),
-             *                  example={"user_id": 1}
+             *                  example={"user_id": 2}
              *              )
              *          )
              *      ),
@@ -1017,7 +1056,7 @@ class Api
              *                      type="[integer array]"
              *                  ),
              *                  example={
-             *                      "user_id": 1, 
+             *                      "user_id": 2, 
              *                      "user_name": "new_snake_case_nickname",
              *                      "user_activated": 0,
              *                      "group_id": {1, 999}
@@ -1049,7 +1088,7 @@ class Api
              *                      property="user_id",
              *                      type="int64"
              *                  ),
-             *                  example={"user_id": 1}
+             *                  example={"user_id": 2}
              *              )
              *          )
              *      ),
@@ -1078,14 +1117,14 @@ class Api
              *                      type="string"
              *                  ),
              *                  example={
-             *                      "service_id": 1,
              *                      "service_name": "SSH",
              *                      "service_type": "port",
              *                      "service_endpoint": "telnet://localhost",
              *                      "service_port": 22,
              *                      "service_activated": 1,
              *                      "service_public": 0,
-             *                      "group_id": {1, 4}
+             *                      "group_id": {1, 4},
+             *                      "host_id": 1
              *                  }
              *              )
              *          )
@@ -1165,7 +1204,8 @@ class Api
              *                      "service_downtime": "UTC+2/1.00AM",
              *                      "service_activated": 1,
              *                      "service_public": 1,
-             *                      "group_id": {1, 4, 5, 999}
+             *                      "group_id": {1, 4, 5, 999},
+             *                      "host_id": 1
              *                  }
              *              )
              *          )
@@ -1265,6 +1305,8 @@ class Api
             "processing_time_in_ms" => round((microtime(true) - $this->api_timestamp_start) * 1000, 2),
             "api_quota_hourly" => self::API_USAGE_LIMIT,
             "api_usage_hourly" => $this->api_usage,
+            "api_identity" => $this->api_identity,
+            "api_groups" => $this->api_groups,
             "function" => $function,
             "message" => $this->status_message ?? self::HTTP_CODE[$code],
             "status_code" => $code
@@ -1275,17 +1317,20 @@ class Api
             "data" => $this->engine_output
         ];
 
-        header("User-Agent: " . $this->user_agent);
-        header("$this->http_version $code " . self::HTTP_CODE[$code]);
-        //header($_SERVER["SERVER_PROTOCOL"] . " $code " . self::HTTP_CODE[$code] . ": " . $this->status_message);
-        header("Content-type: application/json");
-
         // CORS for swagger_ui container
         // https://swagger.io/docs/open-source-tools/swagger-ui/usage/cors/
         header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE"); 
+        header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); 
         header("Access-Control-Allow-Headers: Content-Type, X-Api-Key, Authorization");
         
+        // system-specified headers
+        header("User-Agent: " . $this->user_agent);
+        header("Content-type: application/json");
+        //header("$this->http_version $code " . self::HTTP_CODE[$code]);
+        
+        // this one result into NetworkError in Swagger UI -- FIXME!
+        //header($_SERVER["SERVER_PROTOCOL"] . " $code " . self::HTTP_CODE[$code] . ": " . $this->status_message);
+
         // JSON_FORCE_OBJECT: supervisor user_id is 0, therefore we need to explicitly print "0" as array key
         // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
         // https://www.php.net/manual/en/function.json-encode.php

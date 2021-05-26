@@ -13,8 +13,8 @@
 
 // curl + curlopts + public apikey
 
-$public_key = "";
-$endpoint = "http://localhost/api/v2/GetPublicStatus?apikey=$public_key";
+$public_key = "52ec36471a0c747eea554181a5e2620c2eec1fb685f34b157bfe30529d58740a61d030f0b5e15101de2722baa27f04407e2415c948c7359faa95d7e8bca72a3a";
+$endpoint = "http://localhost/api/v2/GetPublicStatus";
 
 $user_agent = "tiny-monitor status page / cURL " . curl_version()["version"] ?? null;
 $engine_output = [];
@@ -35,12 +35,16 @@ $curl_opts = [
     CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
     CURLOPT_TIMEOUT => 20,
     CURLOPT_USERAGENT => $user_agent,
-    CURLOPT_HTTPHEADER => ["Content-type: text/plain"]
+    CURLOPT_HTTPHEADER => [
+      "Content-type: application/json",
+      "X-Api-Key: $public_key"
+    ]
 ];
 
+// get services' raw list
 $curl_handle = curl_init($endpoint);
 curl_setopt_array($curl_handle, $curl_opts);
-curl_exec($curl_handle);
+$services = curl_exec($curl_handle)["data"] ?? null;
 curl_close($curl_handle);
 
 // demo data
@@ -65,10 +69,17 @@ $demo_services = [
   ]
 ];
 
-(int) $not_operational_count = 0;
-foreach ($demo_services as $s) { if (!$s["service_status"]) $not_operational_count++; }
+// load demo data, if API returns no data at all
+if (!$services || empty($services)) {
+  $services = $demo_services;
+}
 
-$refreshed_formated = "29 minutes";
+// check how many services are down (not-operational status)
+(int) $not_operational_count = 0;
+foreach ($services as $s) { if (!$s["service_status"]) $not_operational_count++; }
+
+// formated timestamp of last test
+$refreshed_formated = date("H:i:s d-m-Y", time()); // "29 minutes";
 
 ?>
 
@@ -91,7 +102,7 @@ $refreshed_formated = "29 minutes";
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1>Public Status Page</h1>
+        <h1>Public Status Page / tiny-monitor</h1>
       </div>
     </div>
     
@@ -113,7 +124,7 @@ $refreshed_formated = "29 minutes";
             <div class="col-md-12 column">
               <div class="list-group">
 
-                <?php foreach($demo_services as $s): ?>
+                <?php foreach($services as $s): ?>
                 <div class="list-group-item">
                   <h4 class="list-group-item-heading">
                     <?php echo $s["service_name"]; ?>

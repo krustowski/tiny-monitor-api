@@ -54,8 +54,8 @@
  *      description="tiny-monitor service operations"
  * ),
  * @OA\Tag(
- *      name="check",
- *      description="tiny-monitor operations about service checkings"
+ *      name="status",
+ *      description="tiny-monitor operations about service/host/group statuses"
  * ),
  * @OA\Tag(
  *      name="system",
@@ -546,7 +546,7 @@ class Api
             /**
              * @OA\Get(
              *     path="/GetStatus",
-             *     tags={"system"},
+             *     tags={"status"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -569,7 +569,7 @@ class Api
             /**
              * @OA\Get(
              *     path="/GetPublicStatus",
-             *     tags={"system"},
+             *     tags={"status"},
              *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
              * )
              */
@@ -590,10 +590,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/GetDetail",
-             *     tags={"system"},
-             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             * @OA\Post(
+             *   path="/GetStatusDetail",
+             *      tags={"status"},
+             *      @OA\RequestBody(
+             *          description="test service specified by service_id",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"service_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200",
+             *          description="Service service_id queued for test"
+             *      )
              * )
              */
             case 'GetStatusDetail':
@@ -632,10 +649,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Post(
              *     path="/AddGroup",
              *     tags={"group"},
-             *     @OA\Response(response="200", description="Get system components version and statuses inc. load")
+             *     @OA\RequestBody(
+             *          description="place parameters for group addition",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="group_name",
+             *                      type="int64"
+             *                  ),
+             *                  example={"group_name": "new_snake_case_group_name"}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Group added"
+             *     )
              * )
              */
             case 'AddGroup':
@@ -646,7 +680,10 @@ class Api
              * @OA\Get(
              *     path="/GetGroupList",
              *     tags={"group"},
-             *     @OA\Response(response="200", description="")
+             *      @OA\Response(
+             *         response=200,
+             *         description="Got group list"
+             *     )
              * )
              */
             case "GetGroupList":
@@ -654,10 +691,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Post(
              *     path="/GetGroupDetail",
              *     tags={"group"},
-             *     @OA\Response(response="200", description="")
+             *     @OA\RequestBody(
+             *          description="place parameters for group detail",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="group_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"group_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Got group detail"
+             *     )
              * )
              */
             case 'GetGroupDetail':
@@ -665,10 +719,30 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/SetGroupDetail",
-             *     tags={"group"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Put(
+             *      path="/SetGroupDetail",
+             *      tags={"group"},
+             *      @OA\RequestBody(
+             *          description="place parameters for group modification",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="group_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={
+             *                      "group_id": 1,
+             *                      "group_name": "new_group_name_if_exists"
+             *                  }
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Group modified"
+             *     )
              * )
              */
             case 'SetGroupDetail':
@@ -676,10 +750,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/DeleteGroup",
-             *     tags={"group"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Delete(
+             *      path="/DeleteGroup",
+             *      tags={"group"},
+             *      @OA\RequestBody(
+             *          description="place parameters for group deletion",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="group_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"group_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Group deleted"
+             *     )
              * )
              */
             case 'DeleteGroup':
@@ -687,10 +778,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/AddHost",
-             *     tags={"host"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Post(
+             *      path="/AddHost",
+             *      tags={"host"},
+             *      @OA\RequestBody(
+             *          description="place parameters for host addition",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="host_name",
+             *                      type="int64"
+             *                  ),
+             *                  example={"host_name": "testing-vps-name"}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Host added"
+             *     )
              * )
              */
             case 'AddHost':
@@ -699,9 +807,12 @@ class Api
             
             /**
              * @OA\Get(
-             *     path="/GetHostList",
-             *     tags={"host"},
-             *     @OA\Response(response="200", description="")
+             *      path="/GetHostList",
+             *      tags={"host"},
+             *      @OA\Response(
+             *         response=200,
+             *         description="Got host list"
+             *     )
              * )
              */
             case 'GetHostList':
@@ -709,10 +820,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/GetHostDetail",
-             *     tags={"host"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Post(
+             *      path="/GetHostDetail",
+             *      tags={"host"},
+             *      @OA\RequestBody(
+             *          description="place parameters for host detail",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="host_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"host_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Got host detail"
+             *     )
              * )
              */
             case 'GetHostDetail':
@@ -720,10 +848,44 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Put(
              *     path="/SetHostDetail",
              *     tags={"host"},
-             *     @OA\Response(response="200", description="")
+             *     @OA\RequestBody(
+             *          description="place parameters for host modification",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="host_id",
+             *                      type="int64"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="host_name",
+             *                      type="string"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="host_type",
+             *                      type="string"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="group_id",
+             *                      type="[integer array]"
+             *                  ),
+             *                  example={
+             *                      "host_id": 1,
+             *                      "host_name": "new_snake_cased_hostname",
+             *                      "host_type": "VPS",
+             *                      "group_id": {1, 2, 3, 4}
+             *                  }
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Host modified"
+             *     )
              * )
              */
             case 'SetHostDetail':
@@ -731,10 +893,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Delete(
              *     path="/DeleteHost",
              *     tags={"host"},
-             *     @OA\Response(response="200", description="")
+             *     @OA\RequestBody(
+             *          description="place parameters for host deletion",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="host_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"host_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *         response=200,
+             *         description="Host deleted"
+             *     )
              * )
              */
             case 'DeleteHost':
@@ -751,10 +930,6 @@ class Api
              *          @OA\MediaType(
              *              mediaType="application/json",
              *              @OA\Schema(
-             *                  @OA\Property(
-             *                      property="user_id",
-             *                      type="integer"
-             *                  ),
              *                  @OA\Property(
              *                      property="user_name",
              *                      type="string"
@@ -775,11 +950,12 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/GetUserList",
-             *     tags={"user"},
-             *     @OA\Response(
-             *          response="200", 
-             *          description="Get list of all users")
+             *      path="/GetUserList",
+             *      tags={"user"},
+             *      @OA\Response(
+             *         response=200,
+             *         description="Got list of all users"
+             *     )
              * )
              */
             case 'GetUserList':
@@ -787,10 +963,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/GetUserDetail",
-             *     tags={"user"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Post(
+             *      path="/GetUserDetail",
+             *      tags={"user"},
+             *      @OA\RequestBody(
+             *          description="place user_id to get its info",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="user_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"user_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description="Got explicit user detail"
+             *      )
              * )
              */
             case 'GetUserDetail':
@@ -798,10 +991,44 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/SetUserDetail",
-             *     tags={"user"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Put(
+             *      path="/SetUserDetail",
+             *      tags={"user"},
+             *      @OA\RequestBody(
+             *          description="place user parameters to (re)set",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="user_id",
+             *                      type="int64"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="user_name",
+             *                      type="string"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="user_activated",
+             *                      type="boolean"
+             *                  ),
+             *                  @OA\Property(
+             *                      property="group_id",
+             *                      type="[integer array]"
+             *                  ),
+             *                  example={
+             *                      "user_id": 1, 
+             *                      "user_name": "new_snake_case_nickname",
+             *                      "user_activated": 0,
+             *                      "group_id": {1, 999}
+             *                  }
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description=""
+             *      )
              * )
              */
             case 'SetUserDetail':
@@ -809,10 +1036,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/DeleteUser",
-             *     tags={"user"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Delete(
+             *      path="/DeleteUser",
+             *      tags={"user"},
+             *      @OA\RequestBody(
+             *          description="place user_id to delete it",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="user_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"user_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description="User deleted"
+             *      )
              * )
              */
             case 'DeleteUser':
@@ -820,10 +1064,36 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Post(
              *     path="/AddService",
              *     tags={"service"},
-             *     @OA\Response(response="200", description="")
+             *     @OA\RequestBody(
+             *          description="add new service",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_name",
+             *                      type="string"
+             *                  ),
+             *                  example={
+             *                      "service_id": 1,
+             *                      "service_name": "SSH",
+             *                      "service_type": "port",
+             *                      "service_endpoint": "telnet://localhost",
+             *                      "service_port": 22,
+             *                      "service_activated": 1,
+             *                      "service_public": 0,
+             *                      "group_id": {1, 4}
+             *                  }
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description="New service addded"
+             *      )
              * )
              */
             case 'AddService':
@@ -832,9 +1102,12 @@ class Api
 
             /**
              * @OA\Get(
-             *     path="/GetServiceList",
-             *     tags={"service"},
-             *     @OA\Response(response="200", description="")
+             *      path="/GetServiceList",
+             *      tags={"service"},
+             *      @OA\Response(
+             *          response="200", 
+             *          description="Got services list"
+             *      )
              * )
              */
             case 'GetServiceList':
@@ -842,10 +1115,27 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/GetServiceDetail",
-             *     tags={"service"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Post(
+             *      path="/GetServiceDetail",
+             *      tags={"service"},
+             *      @OA\RequestBody(
+             *          description="test service specified by service_id",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"service_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description="Got service detail"
+             *      )
              * )
              */
             case 'GetServiceDetail':
@@ -853,10 +1143,37 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
+             * @OA\Put(
              *     path="/SetServiceDetail",
              *     tags={"service"},
-             *     @OA\Response(response="200", description="")
+             *     @OA\RequestBody(
+             *          description="test service specified by service_id",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={
+             *                      "service_id": 1,
+             *                      "service_name": "SSH",
+             *                      "service_type": "port",
+             *                      "service_endpoint": "telnet://localhost",
+             *                      "service_port": 22,
+             *                      "service_downtime": "UTC+2/1.00AM",
+             *                      "service_activated": 1,
+             *                      "service_public": 1,
+             *                      "group_id": {1, 4, 5, 999}
+             *                  }
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200",
+             *          description="Service service_id queued for test"
+             *      )
              * )
              */
             case 'SetServiceDetail':
@@ -864,10 +1181,56 @@ class Api
                 break;
 
             /**
-             * @OA\Get(
-             *     path="/DeleteService",
-             *     tags={"service"},
-             *     @OA\Response(response="200", description="")
+             * @OA\Post(
+             *   path="/TestService",
+             *      tags={"service"},
+             *      @OA\RequestBody(
+             *          description="test service specified by service_id",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"service_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200",
+             *          description="Service service_id queued for test"
+             *      )
+             * )
+             */
+            case 'TestService':
+                //$this->testService();
+                $this->writeJSON(code: 406);
+                break;
+
+            /**
+             * @OA\Delete(
+             *      path="/DeleteService",
+             *      tags={"service"},
+             *      @OA\RequestBody(
+             *          description="specify service by service_id to be deleted",
+             *          required=true,
+             *          @OA\MediaType(
+             *              mediaType="application/json",
+             *              @OA\Schema(
+             *                  @OA\Property(
+             *                      property="service_id",
+             *                      type="int64"
+             *                  ),
+             *                  example={"service_id": 1}
+             *              )
+             *          )
+             *      ),
+             *      @OA\Response(
+             *          response="200", 
+             *          description="Service deleted"
+             *      )
              * )
              */
             case 'DeleteService':

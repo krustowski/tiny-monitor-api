@@ -325,6 +325,7 @@ class Api
                     
             if ($num_rows > 0) {
                 $this->status_message = "This $property already exists!";
+                $this->engine_output = $data;
                 $this->writeJSON(code: 406);
             }
 

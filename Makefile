@@ -79,7 +79,7 @@ git_pull:
 
 composer:
 	@echo -e "\n${YELLOW} Setting the 'vendor' dir using composer ...${RESET}\n"
-	@composer install
+	@composer update
 
 key:
 	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"

@@ -25,7 +25,7 @@ $curl_opts = [
     //CURLOPT_FORBID_REUSE => true,            // true = do not use this con again
     CURLOPT_FRESH_CONNECT => true,           // true = no cached cons
     //CURLOPT_HEADER => false,                 // true = send header in output
-    //CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_RETURNTRANSFER => true,
     //CURLOPT_SSL_VERIFYPEER => false,
     //CURLOPT_CONNECTTIMEOUT => 30,            // seconds
     //CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
@@ -42,7 +42,7 @@ $curl_opts = [
 // get services' raw list
 $curl_handle = \curl_init(url: $endpoint);
 \curl_setopt_array(handle: $curl_handle, options: $curl_opts);
-$services = \json_decode(\curl_exec(handle: $curl_handle), true)["data"] ?? null;
+$services = json_decode(\curl_exec(handle: $curl_handle), true)["data"] ?? null;
 \curl_close(handle: $curl_handle);
 
 // demo data
@@ -77,7 +77,7 @@ if (!$services || empty($services)) {
 foreach ($services as $s) { if (!$s["service_status"]) $not_operational_count++; }
 
 // formated timestamp of last test
-$refreshed_formated = date("H:i:s d-m-Y", time()); // "29 minutes";
+$refreshed_formated = "just seconds"; //date("H:i:s d-m-Y", time()); // "29 minutes";
 ?>
 
 <!doctype html>

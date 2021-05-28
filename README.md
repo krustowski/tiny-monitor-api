@@ -1,4 +1,4 @@
-# Tiny Monitor API
+# Tiny Monitor API (pre-release v1.9)
 
 ## API documentation
 

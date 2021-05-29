@@ -7,23 +7,21 @@
  * @license MIT
  */
 
-// TODO
-// public status page from public variables == __very__ simple TMv2 client
-// public hosts very basic statuspage
+// core constants
+defined("ROOT_DIR")          || define("ROOT_DIR", __DIR__ . "/..");
+defined("INIT_CONFIG")       || define("INIT_CONFIG", ROOT_DIR . "/init_config.json");
+
+if (!file_exists(filename: INIT_CONFIG))
+    die ("Fatal error: no init_config.json!");
 
 // get unique public APIKEY
 $public_apikey = null;
 
-try {
-  $raw_jon = file_get_contents(filename: __DIR__ . "/../init_config.json");
-  $public_apikey = json_decode($raw_json, associative: true)["public_apikey"];
-} catch (Exception $e) {
-  die ($e);
-}
+$raw_json = file_get_contents(filename: INIT_CONFIG);
+$public_apikey = json_decode(json: $raw_json, associative: true)["public_apikey"];
 
-if (!$public_apikey) {
+if (!$public_apikey)
   die ("No public APIKEY found!");
-}
 
 $endpoint = "http://localhost/api/v2/GetPublicStatus";
 $user_agent = "tiny-monitor status page / cURL " . \curl_version()["version"] ?? null;

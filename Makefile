@@ -98,7 +98,7 @@ build:
 
 run:
 	@echo -e "\n${YELLOW} Starting container ...${RESET}\n"
-	@docker-compose up --detach
+	@docker-compose up --detach --force-recreate
 
 test:
 	@echo -e "\n${YELLOW} Running unit tests ...${RESET}\n"

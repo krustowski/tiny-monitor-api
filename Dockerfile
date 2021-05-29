@@ -55,8 +55,11 @@ RUN rm -f /etc/nginx/http.d/default* && \
     mkdir /run/nginx && \
     chown nginx:nginx /run/nginx && \
     nginx -t && \
-    php-fpm8 -t
+    php-fpm8 -t && \
+    cp /usr/share/zoneinfo/${TZ} /etc/localtime && \
+    echo "${TZ}" > /etc/timezone
 
+# forward nginx logs to stdout
 RUN rm -f /var/log/nginx/* && \
     ln -s /dev/stdout /var/log/nginx/error.log && \
     ln -s /dev/stdout /var/log/nginx/access.log

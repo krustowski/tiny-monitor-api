@@ -64,7 +64,7 @@ info:
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
 # deployment simplistic 'pipeline'
-deploy: docker_pull git_pull composer key link_init_file doc build run call
+deploy: docker_pull git_pull composer key link_init_file doc build run call log
 
 config:
 	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"

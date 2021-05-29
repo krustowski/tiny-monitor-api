@@ -14,7 +14,7 @@ services:
         PHP_VERSION: ${PHP_VERSION}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/api/v2/", "-H", "X-Api-Key: ${SUPERVISOR_APIKEY}"]
+      test: ["CMD", "curl", "-f", "http://localhost/api/v2/"]
       interval: 5m
       timeout: 60s
       retries: 2
@@ -26,9 +26,6 @@ services:
         protocol: tcp
     networks: 
       - ${NETWORK_NAME}
-    #environment:
-      #SUPERVISOR_APIKEY: ${SUPERVISOR_APIKEY}
-      #DOCKER_USED_IMAGE: ${DOCKER_USED_IMAGE}
 
   swagger_ui:
     image: swaggerapi/swagger-ui

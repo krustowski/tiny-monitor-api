@@ -12,6 +12,7 @@
 cat > ${INIT_APP_FILE} << EOF
 {
     "app_root": "${APP_ROOT}",
+    "app_version": "$(cat .git/ORIG_HEAD)",
     "super_apikey": "$(cat ${SUPER_APIKEY_FILE})",
     "public_apikey": "$(cat ${PUBLIC_APIKEY_FILE})",
     "database_file": "${DATABASE_FILE}"

@@ -550,6 +550,48 @@ class Api
         $this->writeJSON();
     }
 
+    /** test service
+     * 
+     * @return void
+     */
+    private function testService()
+    {
+        $data = $this->payload;
+
+        // run single, or multiple tests (cron/healthcheck)
+        if (isset($data["service_id"])) {
+            $services = Engine::getServices($data["service_id"]);
+        } else {
+            $services = Engine::getServices();
+        }
+
+        // got engine output -- test results!
+        $raw_engine_output = Engine::testService(services: $services);
+
+        // run raw results for one service query
+        if (count(value: $raw_engine_output) == 1) {
+            $this->engine_output = $raw_engine_output;
+            $this->writeJSON();
+        }
+
+        // update database -- new test results
+        $sql = new SQLite(DATABASE_FILE);
+
+        foreach ($raw_engine_output as $srv) {
+            $status = 1;
+            if ($srv["http_code"] != 200)
+                $status = 0;
+
+            $sql->query("UPDATE monitor_services SET 
+                service_status = '$status',
+                service_last_test = '" . time() . "'
+                WHERE service_id = '" . $srv["service_id"] . "'");
+        }
+
+        $this->engine_output = null;
+        $this->writeJSON();
+    }
+
     /**
      * entrypoint for all API calls
      * 
@@ -1240,8 +1282,22 @@ class Api
              * )
              */
             case 'TestService':
-                //$this->testService();
-                $this->writeJSON(code: 406);
+                $this->testService();
+                break;
+
+            /**
+             * @OA\Get(
+             *   path="/TestServiceAll",
+             *      tags={"service"},
+             *      summary="test all activated services",
+             *      @OA\Response(
+             *          response="200",
+             *          description="Service service_id queued for test"
+             *      )
+             * )
+             */
+            case 'TestServiceAll':
+                $this->testService();
                 break;
 
             /**

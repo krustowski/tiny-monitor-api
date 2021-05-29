@@ -92,13 +92,13 @@ link_init_file:
 
 build:
 	@echo -e "\n${YELLOW} Building docker image ...${RESET}\n"
-	@docker-compose build \
+	@SUPERVISOR_APIKEY=`cat ${SUPER_APIKEY_FILE}` docker-compose build \
 		&& exit 0 \
 		|| echo "\n${RED} docker is not running!${RESET}\n"; exit 1
 
 run:
 	@echo -e "\n${YELLOW} Starting container ...${RESET}\n"
-	@docker-compose up --detach --force-recreate
+	@SUPERVISOR_APIKEY=`cat ${SUPER_APIKEY_FILE}` docker-compose up --detach --force-recreate
 
 test:
 	@echo -e "\n${YELLOW} Running unit tests ...${RESET}\n"

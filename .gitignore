@@ -8,6 +8,7 @@
 Thumbs.db
 vendor/
 doc/
+composer.lock
 composer.phar
 .public_apikey
 .supervisor_apikey

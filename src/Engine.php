@@ -27,17 +27,80 @@ use \SQLite3 as SQLite;
  */
 class Engine 
 {    
-    private function getSites() : array
+    public static function getServices(int $service_id = 0) : array
     {
         $sql = new SQLite(DATABASE_FILE);
 
-        return [
-            "hash1" => "https://api.n0p.cz",
-            "hash2" => "https://mon.n0p.cz"
-        ];
+        $one_service = '';
+        if ($service_id > 0)
+            $one_service = " AND service_id = '" . $service_id . "'";
+
+        $res = $sql->query("SELECT service_id,service_endpoint,service_port FROM monitor_services WHERE service_activated = '1' $one_service");
+
+        $services = [];
+        while ($srv = $res->fetchArray(SQLITE3_BOTH)) {
+            $services[] = [
+                "service_id" => $srv["service_id"],
+                "service_endpoint" => $srv["service_endpoint"],
+                "service_port" => $srv["service_port"]
+            ];
+        }
+
+        return $services;
+    }
+
+    /** service checker */
+    public static function testService(array $services) : array 
+    {
+        $user_agent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
+        $engine_output = [];
+
+        foreach ($services as $srv) {
+            $curl_opts = [
+                CURLOPT_CERTINFO => false,               // true = check cert expiry later
+                CURLOPT_DNS_SHUFFLE_ADDRESSES => true,   // true = use randomized addresses from DNS
+                CURLOPT_FOLLOWLOCATION => true,          // true = follow Location: header!
+                CURLOPT_FORBID_REUSE => true,            // true = do not use this con again
+                CURLOPT_FRESH_CONNECT => true,           // true = no cached cons
+                CURLOPT_HEADER => true,                  // true = send header in output
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_SSL_VERIFYPEER => true,
+                CURLOPT_CONNECTTIMEOUT => 10,            // seconds
+                CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
+                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_PORT => $srv["service_port"],
+                CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_USERAGENT => $user_agent
+                //CURLOPT_HTTPHEADER => ["Content-type: text/plain"]
+            ];
+
+            // T H E   M A G I C
+
+            $curl_handle = curl_init(url: $srv["service_endpoint"]);
+            curl_setopt_array(handle: $curl_handle, options: $curl_opts);
+
+            $got_data = curl_exec(handle: $curl_handle);
+            $got_info = curl_getinfo(handle: $curl_handle);
+
+            curl_close(handle: $curl_handle);
+
+            $engine_output[] = [
+                "service_id" => $srv["service_id"],
+                "service_endpoint" => $srv["service_endpoint"],
+                "service_port" => $srv["service_port"],
+                "content_type" => $got_data["content_type"],
+                "http_code" => $got_data["http_code"],
+                "total_time" => $got_data["total_time"],
+                "scheme" => $got_data["scheme"]
+            ];
+        }
+
+        return $engine_output;
     }
 
     /** site checker engine using cURL and cURL-multi */
+    /** LEGACY CODE only */
     public static function checkSite(array $sites) : array
     {
         $userAgent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;

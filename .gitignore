@@ -9,4 +9,6 @@ Thumbs.db
 vendor/
 doc/
 composer.phar
+.public_apikey
 .supervisor_apikey
+init_config.json

@@ -21,12 +21,12 @@
  * ),
  * // the port HAS TO be dynamic!
  * @OA\Server(
- *      url="http://localhost:8051/api/v2/",
- *      description="Docker-compose-linked private REST API server" 
- * ),
- * @OA\Server(
  *      url="https://mon.n0p.cz/api/v2/",
  *      description="Public self-hosted REST API Server" 
+ * ),
+ * @OA\Server(
+ *      url="http://localhost:8051/api/v2/",
+ *      description="Docker-compose-linked private REST API server" 
  * ),
  * @OA\SecurityScheme(
  *      type="apiKey",

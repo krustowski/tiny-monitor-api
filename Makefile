@@ -6,12 +6,12 @@
 
 -include .env
 
+# make additional consts = excluded from .env
 ENV?=deploy
 DOCKER_EXEC_COMMAND?=${SHELL}
 FUNCTION?=GetSystemStatus
 JSON_FILE?=''
 RUN_FROM_MAKEFILE?=true
-APIKEY_FILE?=${APIKEY_FILE}
 SWAGGER_JSON_FILE?=doc/swagger.json
 
 # define standard colors
@@ -44,7 +44,7 @@ export
 # TARGETS
 #
 
-.PHONY: all test clean src public bin vendor doc mods #Makefile Dockerfile docker*
+.PHONY: all bin call clean composer doc docker info init key mods public run src test vendor
 
 all: info
 
@@ -63,7 +63,8 @@ info:
 	@echo -e "${YELLOW} make stop${RESET}   \t destroy the cluster/container stack"
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
-deploy: docker_pull git_pull composer key doc build run call
+# deployment simplistic 'pipeline'
+deploy: docker_pull git_pull composer key link_init_file doc build run call
 
 config:
 	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"
@@ -84,6 +85,10 @@ composer:
 key:
 	@echo -e "\n${YELLOW} Generating new SUPERVISOR_APIKEY ...${RESET}\n"
 	@bash `pwd`/bin/key.sh
+
+link_init_file:
+	@echo -e "\n${YELLOW} Linking app-related files and vars into '${INIT_APP_FILE}' ...${RESET}\n"
+	@bash `pwd`/bin/link_init.sh
 
 build:
 	@echo -e "\n${YELLOW} Building docker image ...${RESET}\n"
@@ -113,6 +118,7 @@ call:
 exec:
 	@echo -e "\n${YELLOW} Executing '${DOCKER_EXEC_COMMAND}' in container ...${RESET}\n"
 	@docker exec -it ${CONTAINER_NAME} ${DOCKER_EXEC_COMMAND}
+	@exit 0
 
 log:
 	@echo -e "\n${YELLOW} Docker logs${RESET}\n"

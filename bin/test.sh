@@ -8,10 +8,10 @@
     echo "This script has to be run by 'make test'!" &&
     exit 1
 
-[[ ! -f ${APIKEY_FILE} ]] \
-    && echo "API key file '${APIKEY_FILE}' not found! Run 'make deploy' and try again!"
+[[ ! -f ${SUPER_APIKEY_FILE} ]] \
+    && echo "API key file '${SUPER_APIKEY_FILE}' not found! Run 'make deploy' and try again!"
     
-export SUPERVISOR_APIKEY=$(cat ${APIKEY_FILE})
+export SUPERVISOR_APIKEY=$(cat ${SUPER_APIKEY_FILE})
 
 COUNTER=0
 

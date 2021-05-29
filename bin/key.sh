@@ -9,6 +9,7 @@
     exit 1
 
 # generate and/or overwrite APIKEY_FILE contents
-ls -lR | xargs -0 printf "%s $(date +\%s) %s" | shasum --algorithm 512 --0 | cut -d' ' -f1 | tr -d '\n' > ${APIKEY_FILE} \
+ls -lR | xargs -0 printf "%s $(date +\%s) %s" | shasum --algorithm 512 --0 | cut -d' ' -f1 | tr -d '\n' > ${SUPER_APIKEY_FILE} && \
+cat ${SUPER_APIKEY_FILE} | xargs -0 printf "%s $(date +\%s) %s" | shasum --algorithm 512 --0 | cut -d' ' -f1 | tr -d '\n' > ${PUBLIC_APIKEY_FILE} \
      && echo " ${GREEN}New SUPERVISOR_APIKEY generated!${RESET}" \
      || echo " ${RED}Something went wrong during new SUPERVISOR_APIKEY generation!${RESET}"

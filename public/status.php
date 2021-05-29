@@ -11,29 +11,26 @@
 // public status page from public variables == __very__ simple TMv2 client
 // public hosts very basic statuspage
 
-// curl + curlopts + public apikey
+// get unique public APIKEY
+$public_apikey = null;
 
-$public_apikey = '52ec36471a0c747eea554181a5e2620c2eec1fb685f34b157bfe30529d58740a61d030f0b5e15101de2722baa27f04407e2415c948c7359faa95d7e8bca72a3a';
+try {
+  $raw_jon = file_get_contents(filename: __DIR__ . "/../init_config.json");
+  $public_apikey = json_decode($raw_json, associative: true)["public_apikey"];
+} catch (Exception $e) {
+  die ($e);
+}
+
+if (!$public_apikey) {
+  die ("No public APIKEY found!");
+}
+
 $endpoint = "http://localhost/api/v2/GetPublicStatus";
-
 $user_agent = "tiny-monitor status page / cURL " . \curl_version()["version"] ?? null;
 
 $curl_opts = [
-    //CURLOPT_CERTINFO => false,               // true = check cert expiry later
-    //CURLOPT_DNS_SHUFFLE_ADDRESSES => true,   // true = use randomized addresses from DNS
-    //CURLOPT_FOLLOWLOCATION => true,          // true = follow Location: header!
-    //CURLOPT_FORBID_REUSE => true,            // true = do not use this con again
     CURLOPT_FRESH_CONNECT => true,           // true = no cached cons
-    //CURLOPT_HEADER => false,                 // true = send header in output
     CURLOPT_RETURNTRANSFER => true,
-    //CURLOPT_SSL_VERIFYPEER => false,
-    //CURLOPT_CONNECTTIMEOUT => 30,            // seconds
-    //CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
-    //CURLOPT_MAXREDIRS => 20,
-    //CURLOPT_PORT => 80,
-    //CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
-    //CURLOPT_TIMEOUT => 20,
-    //CURLOPT_USERAGENT => $user_agent,
     CURLOPT_HTTPHEADER => [
       'X-Api-Key: ' . $public_apikey
     ]

@@ -89,10 +89,10 @@ class Engine
                 "service_id" => $srv["service_id"] ?? 0,
                 "service_endpoint" => $srv["service_endpoint"] ?? "localhost",
                 "service_port" => $srv["service_port"] ?? 0,
-                "content_type" => $got_data["content_type"] ?? null,
-                "http_code" => $got_data["http_code"] ?? 0,
-                "total_time" => $got_data["total_time"] ?? 0,
-                "scheme" => $got_data["scheme"] ?? null
+                "content_type" => $got_info["content_type"] ?? null,
+                "http_code" => $got_info["http_code"] ?? 0,
+                "total_time" => $got_info["total_time"] ?? 0,
+                "scheme" => $got_info["scheme"] ?? null
             ];
         }
 

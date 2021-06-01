@@ -86,13 +86,13 @@ class Engine
             curl_close(handle: $curl_handle);
 
             $engine_output[] = [
-                "service_id" => $srv["service_id"],
-                "service_endpoint" => $srv["service_endpoint"],
-                "service_port" => $srv["service_port"],
-                "content_type" => $got_data["content_type"],
-                "http_code" => $got_data["http_code"],
-                "total_time" => $got_data["total_time"],
-                "scheme" => $got_data["scheme"]
+                "service_id" => $srv["service_id"] ?? 0,
+                "service_endpoint" => $srv["service_endpoint"] ?? "localhost",
+                "service_port" => $srv["service_port"] ?? 0,
+                "content_type" => $got_data["content_type"] ?? null,
+                "http_code" => $got_data["http_code"] ?? 0,
+                "total_time" => $got_data["total_time"] ?? 0,
+                "scheme" => $got_data["scheme"] ?? null
             ];
         }
 

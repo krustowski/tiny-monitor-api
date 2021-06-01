@@ -586,7 +586,7 @@ class Api
 
             $sql->query("UPDATE monitor_services SET 
                 service_status = '$status',
-                serivce_code = '" . $srv["http_code"] . "',
+                service_code = '" . $srv["http_code"] . "',
                 service_last_test = '" . time() . "'
                 WHERE service_id = '" . $srv["service_id"] . "'");
         }

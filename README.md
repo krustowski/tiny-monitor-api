@@ -1,10 +1,14 @@
 # Tiny Monitor API (pre-release v1.9)
 
+Public status page:
+
+https://mon.n0p.cz/status
+
 ## API documentation
 
 ### Production example
 
-https://mon.n0p.cz/doc/
+https://mon.n0p.cz/doc
 
 For auth the supervisor API key is required (for now). Better deploy it locally to be able to fully test it through.
 

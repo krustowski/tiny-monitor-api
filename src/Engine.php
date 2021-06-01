@@ -67,7 +67,7 @@ class Engine
                 CURLOPT_SSL_VERIFYPEER => true,
                 CURLOPT_CONNECTTIMEOUT => 10,            // seconds
                 CURLOPT_DNS_CACHE_TIMEOUT => 120,        // seconds
-                CURLOPT_MAXREDIRS => 5,
+                CURLOPT_MAXREDIRS => 10,
                 CURLOPT_PORT => $srv["service_port"],
                 CURLOPT_DNS_LOCAL_IP4 => "1.1.1.1",
                 CURLOPT_TIMEOUT => 10,
@@ -86,13 +86,13 @@ class Engine
             curl_close(handle: $curl_handle);
 
             $engine_output[] = [
-                "service_id" => $srv["service_id"] ?? 0,
-                "service_endpoint" => $srv["service_endpoint"] ?? "localhost",
-                "service_port" => $srv["service_port"] ?? 0,
-                "content_type" => $got_info["content_type"] ?? null,
-                "http_code" => $got_info["http_code"] ?? 0,
-                "total_time" => $got_info["total_time"] ?? 0,
-                "scheme" => $got_info["scheme"] ?? null
+                "service_id" => $srv["service_id"],
+                "service_endpoint" => $srv["service_endpoint"],
+                "service_port" => $srv["service_port"],
+                "content_type" => $got_info["content_type"],
+                "http_code" => $got_info["http_code"],
+                "total_time" => $got_info["total_time"],
+                "scheme" => $got_info["scheme"]
             ];
         }
 

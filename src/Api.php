@@ -248,6 +248,7 @@ class Api
                     service_downtime TIME,
                     service_activated BOOLEAN,
                     service_status BOOLEAN,
+                    service_code INTEGER,
                     service_public BOOLEAN,
                     service_last_test TIMESTAMP
                     group_id INTEGER,
@@ -391,7 +392,7 @@ class Api
 
         try {
             $sql = new SQLite(DATABASE_FILE);
-            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1'");
+            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1' ORDER BY service_status ASC, service_name");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -579,11 +580,13 @@ class Api
 
         foreach ($raw_engine_output as $srv) {
             $status = 1;
+
             if ($srv["http_code"] != 200)
                 $status = 0;
 
             $sql->query("UPDATE monitor_services SET 
                 service_status = '$status',
+                serivce_code = '" . $srv["http_code"] . "',
                 service_last_test = '" . time() . "'
                 WHERE service_id = '" . $srv["service_id"] . "'");
         }

@@ -7,7 +7,7 @@
  * @license MIT
  *
  * @OA\Info(
- *      description="Docker-linked REST API server",
+ *      description="tiny API-first service-monitoring tool for Docker in PHP8",
  *      title="tiny-monitor REST API",
  *      version="1.9",
  *      @OA\Contact(
@@ -40,10 +40,6 @@
  * @OA\Tag(
  *      name="group",
  *      description="tiny-monitor group operations"
- * ),
- * @OA\Tag(
- *      name="user",
- *      description="tiny-monitor user operations"
  * ),
  * @OA\Tag(
  *      name="host",
@@ -211,7 +207,7 @@ class Api
                 "CREATE TABLE IF NOT EXISTS monitor_users(
                     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_name VARCHAR,
-                    user_acl VARCHAR,
+                    user_type VARCHAR,
                     user_apikey TEXT,
                     user_ip_address VARCHAR,
                     user_last_access TIMESTAMP,

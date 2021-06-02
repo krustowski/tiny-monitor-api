@@ -1,12 +1,12 @@
 {
     "name": "krustowski/tiny-monitor-api",
-    "description": "light-weight service monitoring tool in docker",
+    "description": "tiny API-first service-monitoring tool for Docker in PHP8",
     "type": "project",
     "license": "MIT",
     "authors": [
         {
             "name": "krustowski",
-            "email": "krusty@n0p.cz"
+            "email": "tmv2@n0p.cz"
         }
     ],
     "require": {

@@ -14,7 +14,6 @@
  *          email="tmv2@n0p.cz"
  *      )
  * )
- * @OA\Server(url="http://localhost/api/v2/")
  */
 
 namespace tinyMonitor;
@@ -23,15 +22,31 @@ use Exception;
 use \SQLite3 as SQLite;
 
 /**
- * Property class
+ * abstract Property class
  * 
- * ...
+ * @class Property
  */
-class Property
+abstract class Property
 {
-    private function add() {}
-    private function getDetail() {}
-    private function setDetail() {}
-    private function list() {}
-    private function delete() {}
+    protected int $id;
+    protected string $name;
+    protected string $desc;
+    protected string $type;
+    protected string $apikey;
+
+    protected int $last_time;
+    protected bool $activated;
+
+    protected string $ip_address;
+    protected string $group_id;
+
+    protected function __construct()
+    {
+        return $this;
+    }
+    protected function add() {}
+    protected function getDetail() {}
+    protected function setDetail() {}
+    protected function list() {}
+    protected function delete() {}
 }

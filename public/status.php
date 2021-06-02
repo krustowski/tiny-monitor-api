@@ -43,21 +43,21 @@ $services = json_decode(\curl_exec(handle: $curl_handle), true)["data"] ?? null;
 // demo data
 $demo_services = [
   [
-    "service_name" => "frank_ssh",
-    "service_desc" => "SSH access to frank",
-    "service_endpoint" => "telnet://frank:22",
+    "service_name" => "google_web",
+    "service_desc" => "Google.co.uk website",
+    "service_endpoint" => "https://google.co.uk/",
     "service_status" => true
   ],
   [
-    "service_name" => "monitor_frontend",
-    "service_desc" => "TM frontend site status",
-    "service_endpoint" => "https://monitor:443",
+    "service_name" => "monitor_web",
+    "service_desc" => "TMv2 frontend site status",
+    "service_endpoint" => "https://mon.n0p.cz/status",
     "service_status" => true
   ],
   [
-    "service_name" => "frank_ssh",
-    "service_desc" => "SSH access to hel1",
-    "service_endpoint" => "telnet://hel1:22",
+    "service_name" => "swis_web",
+    "service_desc" => "sWI5 frontend",
+    "service_endpoint" => "https://swis.n0p.cz/",
     "service_status" => false
   ]
 ];

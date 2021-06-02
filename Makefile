@@ -64,7 +64,7 @@ info:
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
 # deployment simplistic 'pipeline'
-deploy: docker_pull git_pull composer key link_init_file doc build run call log
+deploy: docker_pull git_pull version composer key link_init_file doc build run call log
 
 config:
 	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"
@@ -89,6 +89,10 @@ key:
 link_init_file:
 	@echo -e "\n${YELLOW} Linking app-related files and vars into '${INIT_APP_FILE}' ...${RESET}\n"
 	@bash `pwd`/bin/link_init.sh
+
+version: 
+	@echo -e "\n${YELLOW} Replacing APP versions according to dot-env file ...${RESET}\n"
+	@bash `pwd`/bin/reload_version.sh
 
 build:
 	@echo -e "\n${YELLOW} Building docker image ...${RESET}\n"

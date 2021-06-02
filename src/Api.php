@@ -38,18 +38,6 @@
  *      security={{"api_key_auth": {}}}
  * ),
  * @OA\Tag(
- *      name="group",
- *      description="tiny-monitor group operations"
- * ),
- * @OA\Tag(
- *      name="host",
- *      description="tiny-monitor host operations"
- * ),
- * @OA\Tag(
- *      name="service",
- *      description="tiny-monitor service operations"
- * ),
- * @OA\Tag(
  *      name="status",
  *      description="tiny-monitor operations about service/host/group statuses"
  * ),

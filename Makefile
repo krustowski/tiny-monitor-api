@@ -64,7 +64,7 @@ info:
 	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
 
 # deployment simplistic 'pipeline'
-deploy: docker_pull git_pull version composer key link_init_file doc build run call log
+deploy: docker_pull git_pull composer key link_init_file doc build run call log
 
 config:
 	@echo -e "\n${YELLOW} Checking and configuring local environment ...${RESET}\n"
@@ -134,3 +134,10 @@ stop:
 	@echo -e "\n${YELLOW} Destroying the whole cluster ...${RESET}\n"
 	@docker-compose down
 
+# rapid app reload -- save CPU time from image/container rebuilding
+rrl:
+	@echo -e "\n${YELLOW} Rapid app reload triggered ...${RESET}\n"
+	@docker cp src/ ${CONTAINER_NAME}:${APP_ROOT} && \
+		docker cp mods/ ${CONTAINER_NAME}:${APP_ROOT} && \
+		docker cp public/ ${CONTAINER_NAME}:${APP_ROOT} && \
+		echo -e " ok.\n"

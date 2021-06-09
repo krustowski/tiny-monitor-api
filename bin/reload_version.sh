@@ -8,9 +8,10 @@
     echo "This script has to be run by 'make version'!" &&
     exit 1
 
-# https://stackoverflow.com/questions/4210042/how-to-exclude-a-directory-in-find-command
-PHP_PROJECT_FILES=$(find . -f -name "*.php" -path "./vendor" -prune -false -o)
+# rewrite versions
+PHP_FILES=$(find src mods public -type f -name "*.php")
 
-for PHP_FILE in PHP_PROJECT_FILES; do
-    sed -i "s|version=\"${APP_VERSION_PREV}\",|version=\"${APP_VERSION}\",|" ${PHP_FILE};
+# broken! do not run
+for FILE in ${PHP_FILES}; do
+    sed -i "s|\(.*version\)=\(.*\)|\1=\"${APP_VERSION}\",|" ${FILE};
 done

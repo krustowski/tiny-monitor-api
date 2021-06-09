@@ -18,6 +18,8 @@
 
 namespace tinyMonitor;
 
+use SQLite3 as SQLite;
+
 /**
  * Class User
  * 
@@ -133,17 +135,28 @@ final class User extends Property
 
     public function __construct(int $id, string $name, string $desc, string $type, string $apikey, string $ip_address, string $last_time, bool $activated = false, int $group_id) 
     {
-        $this->id = $id;
+        parent::__construct(id: $id, name: $name, desc: $desc, type: $type, apikey: $apikey, last_time: $last_time, activated: $activated, group_id: $group_id);
+
+        /*$this->id = $id;
         $this->name = $name;
         $this->desc = $desc;
         $this->type = $type;
         $this->apikey = $apikey;
-
-        $this->ip_address = $ip_address;
-        $this->last_access = $last_time;
+        $this->last_time = $last_time;
         $this->activated = $activated;
-        $this->group_id = $group_id;
+        $this->group_id = $group_id;*/
+
+        // override
+        $this->ip_address = $ip_address;
 
         return $this;
+    }
+
+    public function __destruct()
+    {
+        $sql = new SQLite(DATABASE_FILE);
+
+        $sql->query("UPDATE ");
+
     }
 }

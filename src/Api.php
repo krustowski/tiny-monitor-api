@@ -19,11 +19,11 @@
  *          url="https://opensource.org/licenses/MIT"
  *      )
  * ),
- * // the port HAS TO be dynamic!
  * @OA\Server(
  *      url="https://mon.n0p.cz/api/v2/",
  *      description="Public self-hosted REST API Server" 
- * ),
+ * )
+ * // the port SHOULD be dynamic!
  * @OA\Server(
  *      url="http://localhost:8051/api/v2/",
  *      description="Docker-compose-linked private REST API server" 
@@ -49,8 +49,11 @@
 
 namespace tinyMonitor;
 
+use Doctrine\Common\Annotations\Annotation\Enum;
 use Exception;
 use \SQLite3 as SQLite;
+
+use function PHPSTORM_META\type;
 
 /**
  * Api class
@@ -177,30 +180,57 @@ class Api
      */
     private function checkDatabase() 
     {
+        // https://www.php.net/manual/en/function.gettype.php
+        // https://www.sqlite.org/datatype3.html
+        $datatypes = [
+            "integer" => "INTEGER",
+            "string" => "TEXT",
+            "double" => "REAL",
+            "null" => "NULL",
+            "object" => "BLOB",
+            null => "NULL"
+        ];
+
         try {
             $sql = new SQLite(DATABASE_FILE);
 
-            // create database schema
+            // iterate over Property class children -- make their schema
+            foreach (get_declared_classes() as $class) { 
+                if (!is_subclass_of(object_or_class: (string) $class, class: "Property"))
+                    continue;
+
+                $table = 'monitor_' . strtolower(string: (string) $class);
+                $cols = get_class_vars(class: (string) $class) ?? null;
+
+                // skip var-less classes
+                if (!$cols || !count($cols))
+                    continue;
+
+                // NOT very pretty query contruct
+
+                $query = 'CREATE TABLE IF NOT EXISTS ' . $table. '(';
+
+                // prepare columns
+                foreach ($cols as $col) {
+                    if ($col == "id") {
+                        // example: 'id INTEGER PRIMARY KEY AUTOINCREMENT'
+                        $query .= $col . ' ' . $datatypes[gettype(value: $col)] . 'PRIMARY KEY AUTOINCREMENT';
+                    } else {
+                        // example: 'type TEXT'
+                        $query .= ',' . $col . ' ' . $datatypes[gettype(value: $col)];
+                    }
+                }
+
+                $query .= ')';
+                $sql->exec(query: $query);
+            }
+
+            // legacy database schema
             $queries = [
                 "CREATE TABLE IF NOT EXISTS monitor_usage(
                     usage_id INTEGER PRIMARY KEY AUTOINCREMENT, 
                     ip_address VARCHAR, 
                     time_stamp INTEGER
-                )",
-                "CREATE TABLE IF NOT EXISTS monitor_groups(
-                    group_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    group_name VARCHAR,
-                    group_type VARCHAR
-                )",
-                "CREATE TABLE IF NOT EXISTS monitor_users(
-                    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_name VARCHAR,
-                    user_type VARCHAR,
-                    user_apikey TEXT,
-                    user_ip_address VARCHAR,
-                    user_last_access TIMESTAMP,
-                    user_activated BOOLEAN,
-                    group_id INTEGER
                 )",
                 "INSERT OR IGNORE INTO monitor_users(user_id, user_name, user_apikey, user_activated, group_id) VALUES (
                     0, 
@@ -215,28 +245,6 @@ class Api
                     '" . PUBLIC_APIKEY . "',
                     1,
                     1
-                )",
-                "CREATE TABLE IF NOT EXISTS monitor_hosts(
-                    host_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    host_type VARCHAR,
-                    host_name VARCHAR,
-                    group_id INTEGER
-                )",
-                "CREATE TABLE IF NOT EXISTS monitor_services(
-                    service_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    service_name VARCHAR,
-                    service_type VARCHAR,
-                    service_desc TEXT,
-                    service_endpoint VARCHAR,
-                    service_port INTEGER,
-                    service_downtime TIME,
-                    service_activated BOOLEAN,
-                    service_status BOOLEAN,
-                    service_code INTEGER,
-                    service_public BOOLEAN,
-                    service_last_test TIMESTAMP
-                    group_id INTEGER,
-                    host_id INTEGER
                 )"
             ];
 

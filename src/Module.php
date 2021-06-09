@@ -30,9 +30,9 @@ namespace tinyMonitor;
  *      description="tiny-monitor module operations"
  * )
  */
-class Module
+abstract class Module
 {
-    private function load() {}
-    private function enable() {}
-    private function disable() {}
+    protected function load() {}
+    protected function enable() {}
+    protected function disable() {}
 }

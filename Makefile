@@ -61,7 +61,8 @@ info:
 	@echo -e "${YELLOW} make call${RESET}   \t make an API call\n"
 
 	@echo -e "${YELLOW} make stop${RESET}   \t destroy the cluster/container stack"
-	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog\n"
+	@echo -e "${YELLOW} make log${RESET}    \t show docker logs and nginx errorlog"
+	@echo -e "${YELLOW} make rrl${RESET}    \t rapid app reload (no rebuild)\n"
 
 # deployment simplistic 'pipeline'
 deploy: docker_pull git_pull composer key link_init_file doc build run call log

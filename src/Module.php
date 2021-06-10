@@ -19,7 +19,7 @@
 namespace tinyMonitor;
 
 /**
- * Class User
+ * Class Module
  * 
  * @OA\Schema(
  *      title="module model",
@@ -27,7 +27,7 @@ namespace tinyMonitor;
  * )
  * @OA\Tag(
  *      name="module",
- *      description="tiny-monitor module operations"
+ *      description="tiny-monitor module abstract model"
  * )
  */
 abstract class Module

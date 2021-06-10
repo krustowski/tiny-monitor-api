@@ -18,125 +18,159 @@
 
 namespace tinyMonitor;
 
-use ChildClass;
-use Exception;
-use \SQLite3 as SQLite;
-use TypeError;
+use SQLite3;
 
 /**
  * abstract Property class
+ * mainly pseudo-controller schema for child classes
  * 
  * @class Property
  */
 abstract class Property
 {
-    protected int $id;
-    protected string $name;
-    protected string $desc;
-    protected string $type;
-    protected string $apikey;
+    protected int $destruct_flag = 0;
 
-    protected int $last_time;
-    protected bool $activated;
+    private SQLite3 $sql;
+    private string $child_class;
+    private string $table_name;
 
-    protected string $group_id;
+    /** destruct flags */
+    const FLAG_INTACT   = 0;
+    const FLAG_ADD      = 1;
+    const FLAG_UPDATE   = 2;
+    const FLAG_DELETE   = 3;
 
-    protected bool $delete = false;
+    const DATABASE_PREFIX = 'monitor_';
 
-    private $sql;
-
-    const CHILD_MAP_COLUMN = [
-        "User" => "monitor_users",
-        "Group" => "monitor_groups",
-        "Host" => "monitor_hosts",
-        "Service" => "monitor_services",
-        "Usage" => "monitor_usage"
-    ];
-
-    const CHILD_MAP_PREFIX = [
-        "User" => "user_",
-        "Group" => "group_",
-        "Host" => "host_",
-        "Service" => "service_",
-        "Usage" => "usage_"
-     ];
-
-    public function __construct(int $id, string $name, string $desc = "", string $type = "test", string $apikey = null, string $last_time = 0, bool $activated = false, int $group_id = [])
+    public function __construct(SQLite3 $sql = null)
     {
-        if (!$id && !$name) {
-            throw new TypeError("`id` or `name` has to be set to spawn new instance!");
-        }
+        // prepare database connection if not available from Api class
+        $this->sql = $sql ?? new SQLite3(filename: DATABASE_FILE);
 
-        $this->id = $id;
-        $this->name = $name;
-        $this->desc = $desc;
-        $this->type = $type;
-        $this->apikey = $apikey;
-        $this->last_time = $last_time;
-        $this->activated = $activated;
-        $this->group_id = $group_id;
-    
-        try {
-            $this->sql = new SQLite(filename: DATABASE_FILE);
-        }
-        catch (Exception $e) {
-            die($e->getMessage());
-        }
+        // format table_name from child class name
+        $child_class = explode(separator: '\\', string: get_class(object: $this));
+        $this->child_class = end(array: $child_class);
+        $this->table_name = self::DATABASE_PREFIX . strtolower(string: $this->child_class);
 
-        $gen_table = self::CHILD_MAP_COLUMN[get_called_class()];
-        $gen_name = self::CHILD_MAP_PREFIX[get_called_class()] . "name";
-        $gen_id = self::CHILD_MAP_PREFIX[get_called_class()] . "id";
+        $this->checkSchema();
 
         // check if there is any record for given id/name
-        $num_rows = $this->sql->query("SELECT COUNT(*) as count from $gen_table where $gen_name = '$name' OR $gen_id = '$id'")->fetchArray(SQLITE3_ASSOC)["count"];
+        $num_rows = $this->sql->query(
+            query: "SELECT COUNT(*) AS count FROM $this->table_name WHERE id  = '$this->id' OR name = '$this->name'"
+            )->fetchArray(mode: SQLITE3_ASSOC)["count"];
 
         if ($num_rows == 0)
             $this->add();
 
         $this->load();
-
-        $this->id = $data["id"] ?? null;
-        $this->name = $data["name"] ?? null;
-
-        return $this;
     }
 
+    /** check database schema -- child classes' tables */
+    protected function checkSchema() 
+    {
+        $datatypes = [
+            "integer" => "INTEGER",
+            "string" => "TEXT",
+            "double" => "REAL",
+            "null" => "NULL",
+            "object" => "BLOB",
+            null => "NULL"
+        ];
+
+        // redner query string and exec
+        $query = "CREATE TABLE IF NOT EXISTS $this->table_name(";
+
+        foreach($this as $key => $value) 
+        {    
+            $value = $this->sql->escapeString(string: $value);
+
+            if ($key == "id") {
+                $query .= "$key " . $datatypes[gettype(value: $value)] . " PRIMARY KEY AUTOINCREMENT"; 
+            } else {
+                $query .= ", $key " . $datatypes[gettype(value: $value)];
+            }
+        }
+
+        $query .= ')';
+        $this->sql->query(query: $query);
+    }
+
+    /** add new record */
     protected function add() 
     {
-        $this->sql->query("INSERT INTO ... SET ... ");
+        // redner query string and exec
+        $query = "INSERT OR IGNORE INTO $this->table_name VALUES (";
+
+        foreach($this as $key => $value) 
+        {
+            $value = $this->sql->escapeString(string: $value);
+            $qq[] = "$key = '$value'";
+        }
+
+        $query .= implode(separator: ',', array: $qq) . ")";
+        $this->sql->query(query: $query);
 
         return $this;
     }
 
+    /** load object's data from database */
     protected function load()
     {
-        $this->sql->query("SELECT * FROM ... WHERE ... ");
-    
+        $q = "SELECT * FROM $this->table_name WHERE id = '" . $this->sql->escapeString(string: $this->id) . "'";
+        $res = $this->sql->query($q);
+
+        $rows = [];
+        while ($row = $res->fetchArray(SQLITE3_BOTH)) { $rows = $row; }
+
+        // reload parameters' values
+        foreach ($rows as $key => $value) 
+        {
+            $this->$key = $value;
+        }
+
         return $this;
     }
 
-    //protected function add() {}
-    //protected function getDetail() {}
-    //protected function setDetail() {}
-    //protected function list() {}
-    //protected function delete() {}
-    
-    /*protected function reload() {
-        /*$this->id = $id;
-        $this->name = $name;
-        $this->desc = $desc;
-        $this->type = $type;
-        $this->apikey = $apikey;
-        $this->last_time = $last_time;
-        $this->activated = $activated;
-        $this->group_id = $group_id;
-    }*/
-
-    protected function __destruct()
+    /** update/reload object's data in database (for destructor only) */
+    private function save() 
     {
-        if ($this->delete)
-            $this->sql->query("DELETE ... ");
-        else
-            $this->sql->query("UPDATE ... ");
+        $query = "UPDATE $this->table_name SET ";
+
+        foreach($this as $key => $value) 
+        {
+            $value = $this->sql->escapeString(string: $value);
+
+            // never change the ID!
+            if ($key == "id")
+                continue; 
+
+            $qq[] = "$key = '$value'";
+        }
+
+        $query .= implode(separator: ',', array: $qq) .  " WHERE id = '" . $this->id . "'";
+        $this->sql->query(query: $query);
+    }
+
+    /** delete record and destroy the instance immediately */
+    protected function delete() 
+    {
+        $query = "DELETE FROM $this->table_name WHERE id = '$this->id'";
+        $this->sql->query(query: $query);
+
+        $this->__destruct(destruct_flag: self::FLAG_DELETE);
+    }
+
+    /** save object's data */
+    protected function __destruct(int $destruct_flag = self::FLAG_INTACT)
+    {
+        // no further actions needed
+        if ($destruct_flag == self::FLAG_DELETE) {
+            $this->sql->close();
+            return null;
+        }
+
+        /** UPDATE */
+        $this->save();
+        $this->sql->close();
     }
 }

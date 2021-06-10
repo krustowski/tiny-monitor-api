@@ -18,8 +18,6 @@
 
 namespace tinyMonitor;
 
-use SQLite3 as SQLite;
-
 /**
  * Class Host
  * 
@@ -111,23 +109,30 @@ final class Host extends Property
      */
     private int $group_id = [];
 
-    public function __construct(int $id, string $name, string $desc, string $type, string $apikey, string $last_time, string $ip_address, bool $activated = false, int $group_id = []) 
+    public function __construct(
+        int $id, 
+        string $name, 
+        string $desc, 
+        string $type, 
+        string $apikey, 
+        string $last_time, 
+        string $ip_address, 
+        bool $activated = false, 
+        int $group_id = []
+        ) 
     {
-        parent::__construct(id: $id, name: $name, desc: $desc, type: $type, apikey: $apikey, last_time: $last_time, activated: $activated, group_id: $group_id);
-
-        /*$this->id = $id;
+        $this->id = $id;
         $this->name = $name;
         $this->desc = $desc;
         $this->type = $type;
         $this->apikey = $apikey;
         $this->last_time = $last_time;
         $this->activated = $activated;
-        $this->group_id = $group_id;*/
-
-        $sql = new SQLite(DATABASE_FILE);
+        $this->group_id = $group_id;
 
         $this->ip_address = $ip_address;
 
-        return $this;
+        parent::__construct();
+        //return $this;
     }
 }

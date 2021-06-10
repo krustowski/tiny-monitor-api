@@ -110,19 +110,25 @@ final class Group extends Property
      */
     private bool $activated;
 
-    public function __construct(int $id, string $name, string $desc, string $type, string $apikey, string $last_time, bool $activated = false) 
+    public function __construct(
+        int $id, 
+        string $name, 
+        string $desc, 
+        string $type, 
+        string $apikey, 
+        string $last_time, 
+        bool $activated = false
+        ) 
     {
-        parent::__construct(id: $id, name: $name, desc: $desc, type: $type, apikey: $apikey, last_time: $last_time, activated: $activated, group_id: $id);
-
-        /*$this->id = $id;
+        $this->id = $id;
         $this->name = $name;
         $this->desc = $desc;
         $this->type = $type;
         $this->apikey = $apikey;
         $this->last_time = $last_time;
         $this->activated = $activated;
-        $this->group_id = $id;*/
+        //$this->group_id = $id;
 
-        return $this;
+        parent::__construct();
     }
 }

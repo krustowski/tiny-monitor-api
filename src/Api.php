@@ -49,11 +49,8 @@
 
 namespace tinyMonitor;
 
-use Doctrine\Common\Annotations\Annotation\Enum;
 use Exception;
 use \SQLite3 as SQLite;
-
-use function PHPSTORM_META\type;
 
 /**
  * Api class
@@ -85,7 +82,7 @@ class Api
     //private $safePOST = [];
     private $payload = [];
 
-    //private $supervisor_apikey;
+    private $sql;
 
     // constants
     const JSON_ASSOCIATIVE = true;
@@ -110,13 +107,15 @@ class Api
         504 => "Gateway Timeout",
     ];
 
-    public function __construct() 
+    public function __construct(SQLite $sql = null) 
     {
         // init
         $this->api_timestamp_start = (double) microtime(self::MICROTIME_AS_FLOAT) ?? null;
         $this->remote_address = $_SERVER["REMOTE_ADDR"] ?? null;
         $this->user_agent = "tiny-monitor bot / cURL " . curl_version()["version"] ?? null;
 	    
+        $this->sql = $sql ?? new SQLite(filename: DATABASE_FILE);
+
         $this->checkDatabase();
         $this->checkApiUsage();
 
@@ -155,14 +154,12 @@ class Api
             $this->writeJSON(code: 403);
         }
 
-        $sql = new SQLite(DATABASE_FILE);
-
-        if ($sql->querySingle("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apikey . "' AND user_activated='1'") == 0) {
+        if ($this->sql->query("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apikey . "' AND user_activated='1'") == 0) {
             $this->status_message = "This API key is not authorized.";
             $this->writeJSON(code: 401);
         }
 
-        $rows = $sql->query("SELECT * FROM monitor_users  where user_apikey='" . $this->apikey . "'")->fetchArray(SQLITE3_ASSOC) ?? null;
+        $rows = $this->sql->query("SELECT * FROM monitor_users  where user_apikey='" . $this->apikey . "'")->fetchArray(SQLITE3_ASSOC) ?? null;
 
         if (!$rows) {
             $this->status_message = "SQLite3 identity fetch error!";
@@ -192,8 +189,6 @@ class Api
         ];
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-
             // iterate over Property class children -- make their schema
             foreach (get_declared_classes() as $class) { 
                 if (!is_subclass_of(object_or_class: (string) $class, class: "Property"))
@@ -222,7 +217,7 @@ class Api
                 }
 
                 $query .= ')';
-                $sql->exec(query: $query);
+                $this->sql->exec(query: $query);
             }
 
             // legacy database schema
@@ -249,7 +244,7 @@ class Api
             ];
 
             foreach ($queries as $q) {
-                $sql->exec($q);
+                $this->sql->exec($q);
             }
         }
         catch (Exception $e) {
@@ -265,10 +260,10 @@ class Api
      */
     private function checkApiUsage() 
     {
-        $sql = new SQLite(DATABASE_FILE);
+        //$sql = new SQLite(DATABASE_FILE);
 
         // insert new usage
-        $sql->querySingle("INSERT INTO monitor_usage(ip_address, time_stamp) VALUES (
+        $this->sql->query("INSERT INTO monitor_usage(ip_address, time_stamp) VALUES (
             '" . $this->remote_address . "', 
             '" . time() . "'
             )");
@@ -278,7 +273,7 @@ class Api
 
         // access from ip_address within 1 hour
         //$this->apiUsage = $sql->querySingle("SELECT COUNT(*) as count FROM api_usage WHERE ip_address='" . $this->remoteAddress . "'");
-        $this->api_usage = $sql->querySingle("SELECT COUNT(*) as count FROM monitor_usage WHERE ip_address='" . $this->remote_address . "' AND time_stamp BETWEEN " . time() - self::API_USAGE_TIME_LIMIT . " AND " . time());       
+        $this->api_usage = $this->sql->querySingle("SELECT COUNT(*) as count FROM monitor_usage WHERE ip_address='" . $this->remote_address . "' AND time_stamp BETWEEN " . time() - self::API_USAGE_TIME_LIMIT . " AND " . time());       
 
         if ($this->api_usage > self::API_USAGE_LIMIT) {
             $this->api_usage = self::API_USAGE_LIMIT;
@@ -311,10 +306,8 @@ class Api
         }
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-
             $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
-            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+            $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
                     
             if ($num_rows > 0) {
                 $this->status_message = "This $property already exists!";
@@ -322,7 +315,7 @@ class Api
                 $this->writeJSON(code: 406);
             }
 
-            $sql->query("INSERT into $property_table ($property_index) VALUES ('" . $data[$property_index] . "')");
+            $this->sql->query("INSERT into $property_table ($property_index) VALUES ('" . $data[$property_index] . "')");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -349,8 +342,7 @@ class Api
         $property_table = "monitor_" . $property . "s";
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-            $res = $sql->query("SELECT * FROM $property_table");
+            $res = $this->sql->query("SELECT * FROM $property_table");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -383,8 +375,7 @@ class Api
         $property_table = "monitor_" . $property . "s";
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-            $res = $sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1' ORDER BY service_status ASC, service_name");
+            $res = $this->sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1' ORDER BY service_status ASC, service_name");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -430,10 +421,8 @@ class Api
         $property_table = "monitor_" . $property . "s";
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-
             $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
-            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+            $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
                 $this->status_message = "This $property does not exist!";
@@ -441,7 +430,7 @@ class Api
             }
 
             // for over StructModel::propertyModel
-            $rows = $sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
+            $rows = $this->sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
 
             $this->engine_output = $rows;
 
@@ -449,7 +438,7 @@ class Api
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(code: 503);
         }
 
         if (!$return)
@@ -474,10 +463,8 @@ class Api
         $property_table = "monitor_" . $property . "s";
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-
             $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
-            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+            $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
                 $this->status_message = "This $property does not exist!";
@@ -488,7 +475,7 @@ class Api
                 if ($column == $property_id)
                     continue;
 
-                @$sql->query("UPDATE $property_table set $column = '$val' where $property_index = '" . $data[$property_index] . "'");
+                $this->sql->query("UPDATE $property_table set $column = '$val' where $property_index = '" . $data[$property_index] . "'");
             }
 
         }
@@ -498,10 +485,9 @@ class Api
         }
 
         // for over StructModel::propertyModel
-        $rows = $sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
+        $rows = $this->sql->query("SELECT * FROM $property_table  where $property_index='" . $data[$property_index] . "'")->fetchArray(SQLITE3_ASSOC);
 
         $this->engine_output = $rows;
-
         $this->writeJSON();
     }
 
@@ -522,17 +508,15 @@ class Api
         $property_table = "monitor_" . $property . "s";
 
         try {
-            $sql = new SQLite(DATABASE_FILE);
-
             $control_query = "SELECT COUNT(*) as count from $property_table WHERE $property_index = '" . $data[$property_index] . "'";
-            $num_rows = $sql->query($control_query)->fetchArray()["count"];
+            $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
                 $this->status_message = "This $property does not exist!";
                 $this->writeJSON(code: 406);
             }
 
-            $res = $sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
+            $res = $this->sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
@@ -550,6 +534,7 @@ class Api
     private function testService()
     {
         $data = $this->payload;
+        $services = [];
 
         // run single, or multiple tests (cron/healthcheck)
         if (isset($data["service_id"])) {
@@ -567,16 +552,13 @@ class Api
             $this->writeJSON();
         }
 
-        // update database -- new test results
-        $sql = new SQLite(DATABASE_FILE);
-
         foreach ($raw_engine_output as $srv) {
             $status = 1;
 
             if ($srv["http_code"] != 200)
                 $status = 0;
 
-            $sql->query("UPDATE monitor_services SET 
+            $this->sql->query("UPDATE monitor_services SET 
                 service_status = '$status',
                 service_code = '" . $srv["http_code"] . "',
                 service_last_test = '" . time() . "'
@@ -596,27 +578,8 @@ class Api
     {
         $function = $this->route_path[0];
 
-        switch ($function) {
-            /**
-             * @OA\Get(
-             *     path="/GetStatusAllTest",
-             *     tags={"system"},
-             *     summary="run the example curl execution",
-             *     @OA\Response(
-             *          response="200", 
-             *          description="Run test over all code-defined sites (test function)")
-             *     ),
-             *     @OA\Response(
-             *          response="default", 
-             *          description="Server internal error, engine error, parse error")
-             *     )
-             */
-            case 'GetStatusAllTest':
-                //$engine = new Engine();
-                $this->engine_output = Engine::checkSite(["https://mon.n0p.cz"]); //$engine->checkSite($this->testSites);
-                $this->writeJSON();
-                break;
-
+        switch ($function) 
+        {
             /**
              * @OA\Get(
              *     path="/GetSystemStatus",
@@ -625,10 +588,8 @@ class Api
              * )
              */
             case 'GetSystemStatus':
-                $sql = new SQLite(DATABASE_FILE);
-
                 // list tables
-                $tables_query = $sql->query("SELECT name FROM sqlite_master WHERE type='table'");
+                $tables_query = $this->sql->query("SELECT name FROM sqlite_master WHERE type='table'");
                 while ($table = $tables_query->fetchArray(SQLITE3_ASSOC)) {
                     if ($table["name"] != "sqlite_sequence") {
                         $tables[] = $table["name"];
@@ -639,7 +600,7 @@ class Api
                     "remote_address" => $this->remote_address,
                     "php_version" => phpversion() ?? null,
                     "curl_version" => \curl_version()["version"] ?? null,
-                    "sqlite_version" => $sql->version()["versionString"] ?? null,
+                    "sqlite_version" => $this->sql->version()["versionString"] ?? null,
                     "system_load" => \sys_getloadavg() ?? null,
                     "database_tables" => $tables //$sql->querySingle('SELECT COUNT(*) as count FROM api_usage')
                 ];
@@ -1017,7 +978,7 @@ class Api
              *     )
              * )
              */
-                case 'AddUser':
+            case 'AddUser':
                 $this->addProperty(property: "user");
                 break;
 

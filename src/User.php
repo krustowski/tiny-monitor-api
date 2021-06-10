@@ -18,8 +18,6 @@
 
 namespace tinyMonitor;
 
-use SQLite3 as SQLite;
-
 /**
  * Class User
  * 
@@ -43,7 +41,7 @@ final class User extends Property
      *
      * @var integer
      */
-    private int $id;
+    protected int $id;
 
     /**
      * @OA\Property(
@@ -133,30 +131,53 @@ final class User extends Property
      */
     protected int $group_id = [];
 
-    public function __construct(int $id, string $name, string $desc, string $type, string $apikey, string $ip_address, string $last_time, bool $activated = false, int $group_id) 
+    public function __construct(
+        int $id, 
+        string $name, 
+        string $desc, 
+        string $type, 
+        string $apikey, 
+        string $ip_address, 
+        string $last_time,  
+        int $group_id,
+        bool $activated = false
+        ) 
     {
-        parent::__construct(id: $id, name: $name, desc: $desc, type: $type, apikey: $apikey, last_time: $last_time, activated: $activated, group_id: $group_id);
-
-        /*$this->id = $id;
+        $this->id = $id;
         $this->name = $name;
         $this->desc = $desc;
         $this->type = $type;
         $this->apikey = $apikey;
         $this->last_time = $last_time;
         $this->activated = $activated;
-        $this->group_id = $group_id;*/
+        $this->group_id = $group_id;
 
-        // override
+        $this->ip_address = $ip_address;
+
+        parent::__construct();
+        //return $this;
+    }
+
+    /** set variable to the instance  */
+    protected function set(
+        string $name, 
+        string $desc, 
+        string $type, 
+        string $apikey, 
+        string $ip_address, 
+        string $last_time,  
+        int $group_id,
+        bool $activated = false
+    ) {
+        $this->name = $name;
+        $this->desc = $desc;
+        $this->type = $type;
+        $this->apikey = $apikey;
+        $this->last_time = $last_time;
+        $this->activated = $activated;
+        $this->group_id = $group_id;
         $this->ip_address = $ip_address;
 
         return $this;
-    }
-
-    public function __destruct()
-    {
-        $sql = new SQLite(DATABASE_FILE);
-
-        $sql->query("UPDATE ");
-
     }
 }

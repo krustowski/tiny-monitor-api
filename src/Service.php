@@ -176,18 +176,31 @@ final class Service extends Property
      */
     protected int $host_id = [];
 
-    public function __construct(int $id, string $name, string $desc, string $type, string $apikey, int $downtime, string $ip_address, int $port, string $last_time, bool $activated = false, bool $public = false, int $status = 0, int $host_id, int $group_id) 
+    public function __construct(
+        int $id, 
+        string $name, 
+        string $desc, 
+        string $type, 
+        string $apikey, 
+        int $downtime, 
+        string $ip_address, 
+        int $port, 
+        string $last_time, 
+        bool $activated = false, 
+        bool $public = false, 
+        int $status = 0, 
+        int $host_id = 999, 
+        int $group_id = [999]
+        ) 
     {
-        parent::__construct(id: $id, name: $name, desc: $desc, type: $type, apikey: $apikey, last_time: $last_time, activated: $activated, group_id: $group_id);
-
-        /*$this->id = $id;
+        $this->id = $id;
         $this->name = $name;
         $this->desc = $desc;
         $this->type = $type;
         $this->apikey = $apikey;
         $this->last_time = $last_time;
         $this->activated = $activated;
-        $this->group_id = $group_id*/
+        $this->group_id = $group_id;
 
         $this->downtime = $downtime;
         $this->ip_address = $ip_address;
@@ -196,6 +209,7 @@ final class Service extends Property
         $this->status = $status;
         $this->host_id = $host_id;
 
-        return $this;
+        parent::__construct();
+        //return $this;
     }
 }

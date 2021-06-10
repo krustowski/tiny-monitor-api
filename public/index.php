@@ -9,6 +9,8 @@
 
 namespace tinyMonitor;
 
+use SQLite3;
+
 // core constants
 defined("ROOT_DIR")          || define("ROOT_DIR", __DIR__ . "/..");
 defined("INIT_CONFIG")       || define("INIT_CONFIG", ROOT_DIR . "/init_config.json");
@@ -25,4 +27,8 @@ defined("DATABASE_FILE")        || define("DATABASE_FILE", $config["database_fil
 // load dependencies and app
 require_once ROOT_DIR . "/vendor/autoload.php";
 
-new Api();
+new Api(
+    sql: new SQLite3(
+        filename: DATABASE_FILE
+    )
+);

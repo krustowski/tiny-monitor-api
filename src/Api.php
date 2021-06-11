@@ -26,7 +26,7 @@
  * // the port SHOULD be dynamic!
  * @OA\Server(
  *      url="http://localhost:8051/api/v2/",
- *      description="Docker-compose-linked private REST API server" 
+ *      description="Private localhost (docker-compose) REST API server" 
  * ),
  * @OA\SecurityScheme(
  *      type="apiKey",
@@ -130,8 +130,10 @@ class Api
             $json = file_get_contents('php://input');
             $this->payload = json_decode($json, self::JSON_ASSOCIATIVE) ?? null;
         } catch (Exception $e) {
-            $this->status_message = $e;
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: $e->getMessage(),
+                code: 406
+            );
         }
 
         // explode over full path query variable
@@ -147,27 +149,34 @@ class Api
     private function checkApiKey()
     {
         // get API key
-        $this->apikey = \getallheaders()["X-Api-Key"] ?? $this->safe_GET["apikey"] ?? null;
+        $apikey = \getallheaders()["X-Api-Key"] ?? $this->safe_GET["apikey"] ?? null;
 
-        if (!$this->apikey) {
-            $this->status_message = "API key reuqired!";
-            $this->writeJSON(code: 403);
+        if (!$apikey) {
+            $this->writeJSON(
+                message:  "API key reuqired!",
+                code: 403
+            );
         }
 
-        if ($this->sql->query("SELECT COUNT(*) as count FROM monitor_users WHERE user_apikey='" . $this->apikey . "' AND user_activated='1'") == 0) {
-            $this->status_message = "This API key is not authorized.";
-            $this->writeJSON(code: 401);
+        if ($this->sql->query("SELECT COUNT(*) AS count FROM monitor_users WHERE user_apikey='" . $apikey . "' AND user_activated='1'") == 0) {
+            $this->writeJSON(
+                message: "This API key is not authorized.",
+                code: 401
+            );
         }
 
-        $rows = $this->sql->query("SELECT * FROM monitor_users  where user_apikey='" . $this->apikey . "'")->fetchArray(SQLITE3_ASSOC) ?? null;
+        $rows = $this->sql->query("SELECT * FROM monitor_users WHERE user_apikey='" . $apikey . "'")->fetchArray(SQLITE3_ASSOC) ?? null;
 
         if (!$rows) {
-            $this->status_message = "SQLite3 identity fetch error!";
-            $this->writeJSON(code: 500);
+            $this->writeJSON(
+                message: "SQLite3 identity fetch error!",
+                code: 500
+            );
         }
 
-        $this->api_identity = $rows["user_id"];
-        $this->api_groups = $rows["group_id"];
+        $this->apikey = $apikey;
+        $this->api_identity = $rows["user_id"] ?? null;
+        $this->api_groups = $rows["group_id"] ?? null;
     }
 
     /**
@@ -248,8 +257,10 @@ class Api
             }
         }
         catch (Exception $e) {
-            $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(
+                message: $e->getMessage(),
+                code: 503
+            );
         }        
     }
 
@@ -291,8 +302,10 @@ class Api
 
         // property shoud be already defined in function call, therefore there is no need to mention it in message
         if (!$property || !$data) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: "Wrong JSON payload structure! Not Acceptable!",
+                code: 406
+            );
         }
 
         // prefixes and suffixes for database transactions
@@ -301,8 +314,10 @@ class Api
 
         # XSS prevention/anti-sql-injection __experiment__
         if (!$data || empty($data) || !$data[$property_index]) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: "Wrong JSON payload structure! Not Acceptable!",
+                code: 406
+            );
         }
 
         try {
@@ -310,16 +325,20 @@ class Api
             $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
                     
             if ($num_rows > 0) {
-                $this->status_message = "This $property already exists!";
                 $this->engine_output = $data;
-                $this->writeJSON(code: 406);
+                $this->writeJSON(
+                    message: "This $property already exists!",
+                    code: 406
+                );
             }
 
             $this->sql->query("INSERT into $property_table ($property_index) VALUES ('" . $data[$property_index] . "')");
         }
         catch (Exception $e) {
-            $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(
+                message: $e->getMessage(),
+                code: 503
+            );
         }   
 
         $this->engine_output = $data;
@@ -345,8 +364,10 @@ class Api
             $res = $this->sql->query("SELECT * FROM $property_table");
         }
         catch (Exception $e) {
-            $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(
+                message: $e->getMessage(),
+                code: 503
+            );
         }   
 
         // fetch rows
@@ -378,8 +399,10 @@ class Api
             $res = $this->sql->query("SELECT * FROM $property_table WHERE service_activated = '1' AND service_public = '1' ORDER BY service_status ASC, service_name");
         }
         catch (Exception $e) {
-            $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(
+                message: $e->getMessage(),
+                code: 503
+            );
         }   
 
         // fetch rows
@@ -412,8 +435,10 @@ class Api
         $data = $this->payload;
 
         if (!$property || !$data) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: "Wrong JSON payload structure! Not Acceptable!",
+                code: 406
+            );
         }
 
         $property_id = $property . "_id";
@@ -425,8 +450,10 @@ class Api
             $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
-                $this->status_message = "This $property does not exist!";
-                $this->writeJSON(code: 406);
+                $this->writeJSON(
+                    message: "This $property does not exist!",
+                    code: 406
+                );
             }
 
             // for over StructModel::propertyModel
@@ -454,8 +481,10 @@ class Api
         $data = $this->payload;
 
         if (!$property || !$data) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: "Wrong JSON payload structure! Not Acceptable!",
+                code: 406
+            );
         }
 
         $property_id = $property . "_id";
@@ -467,8 +496,10 @@ class Api
             $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
-                $this->status_message = "This $property does not exist!";
-                $this->writeJSON(code: 406);
+                $this->writeJSON(
+                    message: "This $property does not exist!",
+                    code: 406
+                );
             }
 
             foreach ($data as $column => $val) {
@@ -481,7 +512,7 @@ class Api
         }
         catch (Exception $e) {
             $this->status_message = $e->getMessage();
-            $this->writeJSON(503);
+            $this->writeJSON(code: 503);
         }
 
         // for over StructModel::propertyModel
@@ -500,8 +531,10 @@ class Api
         $data = $this->payload;
 
         if (!$property || !$data) {
-            $this->status_message = "Wrong JSON payload structure! Not Acceptable!";
-            $this->writeJSON(code: 406);
+            $this->writeJSON(
+                message: "Wrong JSON payload structure! Not Acceptable!",
+                code: 406
+            );
         }
 
         $property_index = $property . "_id";
@@ -512,8 +545,10 @@ class Api
             $num_rows = $this->sql->query($control_query)->fetchArray()["count"];
 
             if ($num_rows == 0) {
-                $this->status_message = "This $property does not exist!";
-                $this->writeJSON(code: 406);
+                $this->writeJSON(
+                    message: "This $property does not exist!",
+                    code: 406
+                );
             }
 
             $res = $this->sql->query("DELETE from $property_table where $property_index='" . $data[$property_index] . "'");
@@ -583,7 +618,7 @@ class Api
             /**
              * @OA\Get(
              *     path="/GetSystemStatus",
-             *     tags={"system"},
+             *     tags={"status"},
              *     @OA\Response(response="200", description="")
              * )
              */
@@ -672,8 +707,10 @@ class Api
              */
             case 'GetStatusDetail':
                 if (empty($this->route_path[1])) {
-                    $this->status_message = "Hash list is required for this function!";
-                    $this->writeJSON(code: 400);
+                    $this->writeJSON(
+                        message: "Hash list is required for this function!",
+                        code: 400
+                    );
                 }
 
                 $list = explode(",", $this->route_path[1]);
@@ -1289,8 +1326,9 @@ class Api
                 // try cases across loaded modules
                 // $this->scanModules();
                 
-                $this->status_message = "Unknown function. Please, see API documentation at doc/.";
-                $this->writeJSON(code: 404);
+                $this->writeJSON(
+                    message: "Unknown function. Please, see API documentation at doc/.", 
+                    code: 404);
                 break;
         }
     }
@@ -1301,9 +1339,10 @@ class Api
      * @param int $code HTTP code (def. 200)
      * @return void
      */
-    private function writeJSON(int $code = 200) 
+    private function writeJSON(string $message = "OK", int $code = 200) 
     {
         $function = empty($this->route_path[0]) ? null : $this->route_path[0];
+        $message = $this->status_message ?? self::HTTP_CODE[$code];
 
         $api_header = [
             "timestamp" => time() ?? null,
@@ -1315,7 +1354,7 @@ class Api
             "api_identity" => $this->api_identity,
             "api_groups" => $this->api_groups,
             "function" => $function,
-            "message" => $this->status_message ?? self::HTTP_CODE[$code],
+            "message" => $message,
             "status_code" => $code
         ];
 
@@ -1341,7 +1380,7 @@ class Api
         // JSON_FORCE_OBJECT: supervisor user_id is 0, therefore we need to explicitly print "0" as array key
         // https://stackoverflow.com/questions/15290811/php-json-encode-issue-with-array-0-key
         // https://www.php.net/manual/en/function.json-encode.php
-        echo json_encode($data_output, JSON_PRETTY_PRINT);
+        echo json_encode(value: $data_output, flags: JSON_PRETTY_PRINT);
         exit;
     }
 }

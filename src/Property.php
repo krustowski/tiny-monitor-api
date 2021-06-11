@@ -157,14 +157,15 @@ abstract class Property
         $query = "DELETE FROM $this->table_name WHERE id = '$this->id'";
         $this->sql->query(query: $query);
 
-        $this->__destruct(destruct_flag: self::FLAG_DELETE);
+        $this->destruct_flag = self::FLAG_DELETE;
+        $this->__destruct();
     }
 
     /** save object's data */
-    protected function __destruct(int $destruct_flag = self::FLAG_INTACT)
+    protected function __destruct()
     {
         // no further actions needed
-        if ($destruct_flag == self::FLAG_DELETE) {
+        if ($this->destruct_flag == self::FLAG_DELETE) {
             $this->sql->close();
             return null;
         }

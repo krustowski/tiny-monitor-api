@@ -13,5 +13,8 @@ PHP_FILES=$(find src mods public -type f -name "*.php")
 
 # broken! do not run
 for FILE in ${PHP_FILES}; do
-    sed -i "s|\(.*version\)=\(.*\)|\1=\"${APP_VERSION}\",|" ${FILE};
+    sed -i "s|\(.*version\)=\(.*\)|\1=\"${APP_VERSION}\",|" "${FILE}";
 done
+
+# rewrite APP_EXPOSE_PORT in Api.php header OA doc
+sed -i "s|\(http\:\/\/localhost\:\)[0-9]*\(\/api\/v2\/\)|\1${APP_EXPOSE_PORT}\2|" "${ROOT_DIR}/src/Api.php"

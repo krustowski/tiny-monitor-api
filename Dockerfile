@@ -52,7 +52,7 @@ RUN cd /var/www && rm -rf html localhost && \
 
 # reconfigure services
 RUN rm -f /etc/nginx/http.d/default* && \
-    mkdir /run/nginx && \
+    mkdir -p /run/nginx && \
     chown nginx:nginx /run/nginx && \
     nginx -t && \
     php-fpm8 -t && \

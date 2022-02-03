@@ -24,6 +24,7 @@ TOOLS=(
     composer
     jq
     shasum
+    sha512sum
     ${DEVEL_TOOLS[@]}
 )
 
@@ -36,8 +37,9 @@ FAILS_N=0
 for t in ${TOOLS[@]}; do
     printf "${BLUE} Checking '${t}' ...${RESET}"
     [[ ( -f $(which ${t}) ) && ( $(${t} --version) ) ]] \
-        && echo "${GREEN} ok${RESET}" && continue \
-        || echo "${RED} failed${RESET} (missing or not running)"; FAILS_N=$((FAILS_N+1));
+        && { echo "${GREEN} ok${RESET}"; continue } \
+        || { echo "${RED} failed${RESET} (missing or not running)"; FAILS_N=$((FAILS_N+1)) }
+	;
 done
 
 printf "\n"

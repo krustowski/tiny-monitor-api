@@ -1,12 +1,15 @@
-# Tiny Monitor API (pre-release v1.9)
+# Tiny Monitor API (pre-release v1.9) --- archieved
 
-Public status page:
+This project is archiaved at the moment. (This) tiny monitoring service idea is being further developed under the [@savla-dev](https://github.com/savla-dev) operation. 
+
+
+Public status page (demo, may not work in the future):
 
 https://mon.n0p.cz/status
 
 ## API documentation
 
-### Production example
+### Production example (demo)
 
 https://mon.n0p.cz/doc
 
